@@ -53,6 +53,10 @@
         .cal-day.active-day { border-color: white !important; border-width: 2px; }
         .cal-day-score { font-size: 7px; font-weight: 700; margin-top: 2px; }
         .nav-arrow { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: #111; border: 1px solid #333; border-radius: 12px; font-weight: bold; }
+        
+        /* Picker Option Styling */
+        .opt-box { padding: 15px; border: 1px solid #333; border-radius: 15px; text-align: center; font-weight: 800; font-size: 12px; text-transform: uppercase; background: #0a0a0a; }
+        .opt-box.active { border-color: var(--neon); color: var(--neon); background: rgba(34,197,94,0.1); }
     </style>
 </head>
 <body>
@@ -60,7 +64,7 @@
         <div id="streak-counter" class="absolute left-6 top-6 text-orange-500 font-black italic text-sm">🔥 0</div>
         <span class="u-title tracking-[0.4em] mb-4">THE HABIT BUILDER</span>
 
-        <div class="cursor-pointer text-center mb-4" onclick="openCalendar()">
+        <div class="cursor-pointer flex flex-col items-center mb-4" onclick="openCalendar()">
             <p id="display-day" class="u-title text-green-500 mb-0">---</p>
             <h2 id="display-date" class="text-4xl font-black italic uppercase tracking-tighter leading-none">---</h2>
         </div>
@@ -124,7 +128,7 @@
     <div id="picker-modal" class="modal">
         <div class="flex items-center justify-between mb-8">
             <button onclick="closeModal()" class="w-12 h-12 flex bg-zinc-900 rounded-full items-center justify-center text-xl">✕</button>
-            <h3 id="modal-title" class="text-white font-black uppercase tracking-widest text-sm text-center flex-1 mx-4">---</h3>
+            <h3 id="modal-title" class="text-white font-black uppercase tracking-widest text-xs text-center flex-1 mx-4">---</h3>
             <button onclick="closeModal()" class="w-12 h-12 bg-green-500 text-black rounded-full font-bold">✓</button>
         </div>
         <div id="modal-content" class="grid grid-cols-2 gap-3 mb-6 overflow-y-auto"></div>
@@ -169,7 +173,7 @@
             let completed = 0, fnn = false;
             dh.forEach(h => {
                 const l = logs[dateStr]?.[h.id] || { n: null, t: [], txt: '', c: false };
-                const isDone = (h.useNum ? (l.n >= h.min) : true) && (h.useOpt ? (l.t.length > 0) : true) && ((!h.useNum && !h.useOpt) ? l.c : true);
+                const isDone = (h.useNum ? (l.n !== null && l.n >= h.min) : true) && (h.useOpt ? (l.t.length > 0) : true) && ((!h.useNum && !h.useOpt) ? l.c : true);
                 if(isDone) completed++; if(h.nn && !isDone) fnn = true;
             });
             const score = Math.round((completed/dh.length)*100);
@@ -182,7 +186,7 @@
             const todayHabits = manifest.filter(h => h.days.includes(new Date(activeDate).getDay()));
             todayHabits.forEach(h => {
                 const log = logs[activeDate]?.[h.id] || { n: null, t: [], txt: '', c: false };
-                const isDone = (h.useNum ? (log.n >= h.min) : true) && (h.useOpt ? (log.t.length > 0) : true) && ((!h.useNum && !h.useOpt) ? log.c : true);
+                const isDone = (h.useNum ? (log.n !== null && log.n >= h.min) : true) && (h.useOpt ? (log.t.length > 0) : true) && ((!h.useNum && !h.useOpt) ? log.c : true);
                 let btnLabel = "SET"; if(log.n !== null) btnLabel = `${log.n}${h.unit}`; else if(log.t.length > 0) btnLabel = log.t[0];
                 feed.innerHTML += `<div class="habit-card ${h.nn?'nn':''} flex items-center justify-between"><div class="flex flex-col min-w-0"><span class="font-bold text-[15px] ${isDone?'text-white':'text-zinc-500'}">${h.name}</span></div><div class="flex items-center gap-3">${(h.useNum || h.useOpt || h.useText) ? `<button onclick="openPicker('${h.id}')" class="ui-btn ${btnLabel!=='SET'?'has-data':''}">${btnLabel}</button>` : ''}<div class="check-box ${isDone?'active':''}" onclick="toggleManual('${h.id}')">${isDone?'✓':''}</div></div></div>`;
             });
@@ -220,30 +224,49 @@
             for(let d=1; d<=new Date(year, month + 1, 0).getDate(); d++) {
                 const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 const res = getDayScore(ds, target);
-                const scoreColor = res.success ? 'var(--neon)' : (res.score > 0 ? 'var(--nn)' : '#444');
-                grid.innerHTML += `<div class="cal-day ${ds===activeDate?'active-day':''}" style="border-color:${scoreColor}" onclick="selectDate('${ds}')">${d}<span class="cal-day-score" style="color:${scoreColor}">${res.score}%</span></div>`;
+                let bg = 'transparent', bdr = '#222', txt = '#444';
+                if(res.total > 0) {
+                    bg = res.success ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)';
+                    bdr = res.success ? 'var(--neon)' : 'var(--nn)';
+                    txt = bdr;
+                }
+                grid.innerHTML += `<div class="cal-day ${ds===activeDate?'active-day':''}" style="background:${bg}; border-color:${bdr}" onclick="selectDate('${ds}')">${d}<span class="cal-day-score" style="color:${txt}">${res.score}%</span></div>`;
             }
             document.getElementById('calendar-modal').style.display = 'flex';
         }
 
         function selectDate(ds) { activeDate = ds; closeCalendar(); renderTrack(); }
         function closeCalendar() { document.getElementById('calendar-modal').style.display = 'none'; }
+        
+        function openPicker(id) {
+            activePickerHabit = manifest.find(x => x.id === id); 
+            const log = logs[activeDate]?.[id] || { n: null, t: [], txt: '' };
+            document.getElementById('modal-title').innerText = activePickerHabit.name.toUpperCase();
+            const content = document.getElementById('modal-content'); content.innerHTML = '';
+            
+            if(activePickerHabit.useNum) {
+                for(let i=activePickerHabit.min; i<=activePickerHabit.max; i+=activePickerHabit.step) {
+                    content.innerHTML += `<div class="opt-box ${log.n===i?'active':''}" onclick="selectNum(${i})">${i} <small>${activePickerHabit.unit}</small></div>`;
+                }
+            }
+            if(activePickerHabit.useOpt) {
+                activePickerHabit.tags.forEach(t => {
+                    content.innerHTML += `<div class="opt-box ${log.t.includes(t)?'active':''}" onclick="selectTag('${t}')">${t}</div>`;
+                });
+            }
+            document.getElementById('modal-text-sec').classList.toggle('hidden', !activePickerHabit.useText);
+            document.getElementById('modal-text-input').value = log.txt || '';
+            document.getElementById('picker-modal').style.display = 'flex';
+        }
+
+        function selectNum(v) { ensureLog(); logs[activeDate][activePickerHabit.id].n = v; save(); openPicker(activePickerHabit.id); }
+        function selectTag(t) { ensureLog(); let l = logs[activeDate][activePickerHabit.id]; l.t = activePickerHabit.multi ? (l.t.includes(t)?l.t.filter(x=>x!==t):[...l.t,t]) : [t]; save(); openPicker(activePickerHabit.id); }
+        function syncModalText() { ensureLog(); logs[activeDate][activePickerHabit.id].txt = document.getElementById('modal-text-input').value; save(); }
+        
         function saveHabit() {
             const h = { id: 'h' + Date.now(), name: document.getElementById('h-name').value, days: Array.from(document.querySelectorAll('#h-days button.active')).map(b => parseInt(b.dataset.day)), nn: document.getElementById('h-nn').checked, useNum: document.getElementById('use-num').checked, useOpt: document.getElementById('use-opt').checked, useText: document.getElementById('use-text').checked, min: parseInt(document.getElementById('h-min').value || 0), max: parseInt(document.getElementById('h-max').value || 0), step: parseInt(document.getElementById('h-step').value || 1), unit: document.getElementById('h-unit').value || '', tags: document.getElementById('h-custom-tags').value.split(',').map(t => t.trim()).filter(t => t), multi: document.getElementById('h-multi').checked };
             if(h.name) { manifest.push(h); saveManifest(); nav('track'); }
         }
-        function openPicker(id) {
-            activePickerHabit = manifest.find(x => x.id === id); const log = logs[activeDate]?.[id] || { n: null, t: [], txt: '' };
-            const content = document.getElementById('modal-content'); content.innerHTML = '';
-            if(activePickerHabit.useNum) for(let i=activePickerHabit.min; i<=activePickerHabit.max; i+=activePickerHabit.step) content.innerHTML += `<div class="stat-circle w-full rounded-xl ${log.n===i?'active border-green-500':''}" onclick="selectNum(${i})">${i}</div>`;
-            if(activePickerHabit.useOpt) activePickerHabit.tags.forEach(t => content.innerHTML += `<div class="stat-circle w-full rounded-xl ${log.t.includes(t)?'active border-green-500':''}" onclick="selectTag('${t}')">${t}</div>`);
-            document.getElementById('modal-text-sec').classList.toggle('hidden', !activePickerHabit.useText);
-            document.getElementById('modal-text-input').value = log.txt;
-            document.getElementById('picker-modal').style.display = 'flex';
-        }
-        function selectNum(v) { ensureLog(); logs[activeDate][activePickerHabit.id].n = v; save(); closeModal(); }
-        function selectTag(t) { ensureLog(); let l = logs[activeDate][activePickerHabit.id]; l.t = activePickerHabit.multi ? (l.t.includes(t)?l.t.filter(x=>x!==t):[...l.t,t]) : [t]; save(); if(!activePickerHabit.multi) closeModal(); }
-        function syncModalText() { ensureLog(); logs[activeDate][activePickerHabit.id].txt = document.getElementById('modal-text-input').value; save(); }
         function ensureLog() { if(!logs[activeDate]) logs[activeDate] = {}; if(!logs[activeDate][activePickerHabit.id]) logs[activeDate][activePickerHabit.id] = { n:null, t:[], txt:'', c:false }; }
         function toggleManual(id) { activePickerHabit = manifest.find(x => x.id === id); ensureLog(); if(!activePickerHabit.useNum && !activePickerHabit.useOpt) { logs[activeDate][id].c = !logs[activeDate][id].c; save(); } }
         function save() { localStorage.setItem('F40_LOGS', JSON.stringify(logs)); renderTrack(); }
