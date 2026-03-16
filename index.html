@@ -34,11 +34,10 @@
         .u-title { font-size: 9px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; color: #555; }
         .modal { position: fixed; inset: 0; background: #000; z-index: 1000; display: none; flex-direction: column; padding: 20px; overflow-y: auto; }
         
-        /* CALENDAR SPECIFIC FIXES */
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
         .cal-header-cell { text-align: center; font-size: 10px; font-weight: 900; color: var(--neon); padding-bottom: 10px; }
-        .cal-day-cell { aspect-ratio: 1/1; border: 1px solid #222; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; font-weight: 800; font-size: 12px; background: #0a0a0a; }
-        .cal-perc { position: absolute; bottom: 3px; font-size: 6px; font-weight: 900; opacity: 0.8; }
+        .cal-day-cell { aspect-ratio: 1/1; border: 1px solid #222; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 8px; position: relative; font-weight: 800; font-size: 14px; background: #0a0a0a; }
+        .cal-perc { position: absolute; bottom: 8px; font-size: 9px; font-weight: 900; opacity: 1; letter-spacing: -0.05em; }
 
         .fixed-nav { position: fixed; bottom: 0; width: 100%; background: #000; border-top: 1px solid var(--border); display: flex; height: 80px; z-index: 200; padding-bottom: env(safe-area-inset-bottom); }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; font-size: 9px; font-weight: 900; text-transform: uppercase; }
@@ -122,7 +121,7 @@
             <button onclick="closeM('mod-cal')" class="text-2xl">✕</button>
             <div class="text-center">
                 <p id="cal-head-day" class="u-title text-green-500 mb-0">---</p>
-                <h2 id="cal-head-date" class="text-xl font-black uppercase italic">CALENDAR</h2>
+                <h2 id="cal-head-date" class="text-xl font-black uppercase italic tracking-tighter">---</h2>
             </div>
             <div class="w-8"></div>
         </div>
@@ -140,8 +139,8 @@
     </nav>
 
     <script>
-        let manifest = JSON.parse(localStorage.getItem('M_BREAD_V6')) || [];
-        let logs = JSON.parse(localStorage.getItem('L_BREAD_V6')) || {};
+        let manifest = JSON.parse(localStorage.getItem('M_BREAD_V7')) || [];
+        let logs = JSON.parse(localStorage.getItem('L_BREAD_V7')) || {};
         let activeDate = new Date().toISOString().split('T')[0];
         let buildMode = 'fixed', editId = null, curHId = null, hasFocusedNotes = false;
 
@@ -181,7 +180,7 @@
             };
             if(!h.name) return;
             editId ? manifest[manifest.findIndex(x => x.id === editId)] = h : manifest.push(h);
-            localStorage.setItem('M_BREAD_V6', JSON.stringify(manifest));
+            localStorage.setItem('M_BREAD_V7', JSON.stringify(manifest));
             resetBuilder(); nav('track');
         }
 
@@ -227,8 +226,7 @@
                                 ((h.useNum || h.useOpt || h.notes) ? `<div class="set-btn" onclick="openPicker('${h.id}')">SET</div>` : '')}
                             <div class="check-box ${l.done ? 'active' : ''}" onclick="toggleCheck('${h.id}')">${l.done?'✓':''}</div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
             syncHeader();
         }
@@ -260,7 +258,7 @@
         function clearEntry(e) { if(e) e.stopPropagation(); logs[activeDate][curHId] = { done: false, n: null, t: [], notes: '' }; save(true); hasFocusedNotes = false; openPicker(curHId); }
         function closePickerFinal(e) { if(e) e.stopPropagation(); save(); document.getElementById('mod-pick').style.display = 'none'; }
         function ensureL(id) { if(!logs[activeDate]) logs[activeDate] = {}; if(!logs[activeDate][id]) logs[activeDate][id] = { done: false, n: null, t: [], notes: '' }; }
-        function save(silent=false) { localStorage.setItem('L_BREAD_V6', JSON.stringify(logs)); if(!silent) renderTrack(); }
+        function save(silent=false) { localStorage.setItem('L_BREAD_V7', JSON.stringify(logs)); if(!silent) renderTrack(); }
         function closeM(m) { document.getElementById(m).style.display = 'none'; renderTrack(); }
         function toggleCheck(id) { ensureL(id); logs[activeDate][id].done = !logs[activeDate][id].done; save(); }
 
@@ -291,6 +289,9 @@
         function openCalendar() {
             const g = document.getElementById('cal-grid'); g.innerHTML = '';
             const now = new Date(activeDate);
+            document.getElementById('cal-head-day').innerText = now.toLocaleDateString('en-GB', { weekday: 'long' });
+            document.getElementById('cal-head-date').innerText = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+            
             const startDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
             const offset = startDay === 0 ? 6 : startDay - 1;
             const last = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -338,7 +339,7 @@
         }
 
         function resetBuilder() { editId = null; document.getElementById('form-wrap').querySelectorAll('input, textarea').forEach(el => el.type==='checkbox'?el.checked=false:el.value=''); document.getElementById('forge-btn').innerText="Forge Habit"; document.getElementById('cancel-btn').classList.add('hidden'); }
-        function delH(id) { if(confirm('Delete?')) { manifest = manifest.filter(x => x.id !== id); localStorage.setItem('M_BREAD_V6', JSON.stringify(manifest)); renderManifest(); } }
+        function delH(id) { if(confirm('Delete?')) { manifest = manifest.filter(x => x.id !== id); localStorage.setItem('M_BREAD_V7', JSON.stringify(manifest)); renderManifest(); } }
         
         nav('track');
     </script>
