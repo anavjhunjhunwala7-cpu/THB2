@@ -54,10 +54,12 @@
         .quote-banner { font-size: 10px; font-weight: 900; letter-spacing: 0.15em; color: var(--quote); text-transform: uppercase; text-align: center; margin-bottom: 2px; }
         .drag-handle { cursor: grab; padding-right: 12px; color: #333; font-size: 18px; }
         
+        /* Insights period styling */
+        .period-pill-row { display: flex; overflow-x: auto; gap: 6px; padding-bottom: 12px; scrollbar-width: none; }
+        .p-pill { background: #111; border: 1px solid #222; color: #555; padding: 8px 14px; border-radius: 10px; font-size: 10px; font-weight: 900; white-space: nowrap; }
+        .p-pill.active { background: var(--neon); color: #000; border-color: var(--neon); }
         .period-box { background: #111; border: 1px solid #222; border-radius: 16px; display: flex; align-items: center; padding: 6px 12px; gap: 10px; }
-        .max-btn { background: #222; color: #fff; font-size: 9px; font-weight: 900; padding: 8px 12px; border-radius: 10px; }
-        .max-btn.active { background: var(--neon); color: #000; }
-        .tag-tally { font-size: 9px; font-weight: 800; padding: 4px 8px; background: #000; border: 1px solid #222; border-radius: 6px; }
+        .tag-tally { font-size: 11px; font-weight: 900; padding: 6px 12px; background: #000; border: 1px solid #333; border-radius: 8px; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -143,13 +145,20 @@
     <div id="view-insights" class="hidden">
         <div class="p-6 pb-32">
             <h2 class="text-xl font-black uppercase italic mb-6 text-center">Intelligence</h2>
-            <div class="flex items-center gap-2 mb-8">
-                <button id="btn-max-period" class="max-btn active" onclick="setInsightRange('MAX')">ALL</button>
-                <div class="period-box flex-1">
-                    <span class="u-title">Days:</span>
-                    <input type="number" id="custom-days" class="bg-transparent text-white font-black text-sm w-full outline-none" placeholder="7">
-                    <button onclick="setInsightRange('CUSTOM')" class="text-green-500 font-black text-lg">✓</button>
-                </div>
+            <div class="period-pill-row" id="pill-row">
+                <button class="p-pill active" onclick="setInsightRange('MAX')">MAX</button>
+                <button class="p-pill" onclick="setInsightRange(7)">1W</button>
+                <button class="p-pill" onclick="setInsightRange(14)">2W</button>
+                <button class="p-pill" onclick="setInsightRange(21)">3W</button>
+                <button class="p-pill" onclick="setInsightRange(28)">4W</button>
+                <button class="p-pill" onclick="setInsightRange(60)">2M</button>
+                <button class="p-pill" onclick="setInsightRange(90)">3M</button>
+                <button class="p-pill" onclick="setInsightRange(180)">6M</button>
+            </div>
+            <div class="period-box mb-8">
+                <span class="u-title">Custom:</span>
+                <input type="number" id="custom-days" class="bg-transparent text-white font-black text-sm w-full outline-none" placeholder="Enter days...">
+                <button onclick="setInsightRange('CUSTOM')" class="text-green-500 font-black text-lg">✓</button>
             </div>
             <div id="insights-list" class="space-y-4"></div>
 
@@ -193,11 +202,24 @@
         function setQuote() { const qs = ["DISCIPLINE OR REGRET", "WIN THE DAY", "KILL THE EXCUSE", "OWN YOUR LIFE", "DO THE WORK", "STAY HARD"]; document.getElementById('daily-quote').innerText = qs[Math.floor(Math.random() * qs.length)]; }
 
         // --- INTELLIGENCE ENGINE ---
-        function setInsightRange(type) {
-            const maxBtn = document.getElementById('btn-max-period');
-            const customInput = document.getElementById('custom-days');
-            if (type === 'MAX') { insightDays = 0; maxBtn.classList.add('active'); customInput.value = ''; } 
-            else { insightDays = parseInt(customInput.value) || 0; maxBtn.classList.remove('active'); }
+        function setInsightRange(val) {
+            const pills = document.querySelectorAll('.p-pill');
+            pills.forEach(p => p.classList.remove('active'));
+            
+            if (val === 'MAX') {
+                insightDays = 0;
+                pills[0].classList.add('active');
+                document.getElementById('custom-days').value = '';
+            } else if (val === 'CUSTOM') {
+                insightDays = parseInt(document.getElementById('custom-days').value) || 0;
+            } else {
+                insightDays = val;
+                // Highlight the correct pill
+                const labels = ['MAX',7,14,21,28,60,90,180];
+                const idx = labels.indexOf(val);
+                if(idx !== -1) pills[idx].classList.add('active');
+                document.getElementById('custom-days').value = val;
+            }
             renderInsights();
         }
 
@@ -206,32 +228,39 @@
             const now = new Date();
             manifest.forEach(h => {
                 let hits = 0, scheduled = 0, sumNum = 0, countNum = 0, tagCounts = {};
-                Object.keys(logs).forEach(dateStr => {
-                    const logDate = new Date(dateStr);
-                    const diffDays = Math.ceil((now - logDate) / 86400000);
-                    if (insightDays !== 0 && diffDays > insightDays) return;
-                    const l = logs[dateStr][h.id];
-                    if (h.type === 'fixed') { if (h.days.includes(logDate.getDay())) { scheduled++; if (l?.done) hits++; } } 
+                Object.keys(logs).forEach(ds => {
+                    const lDate = new Date(ds);
+                    const diff = Math.ceil((now - lDate) / 86400000);
+                    if (insightDays !== 0 && diff > insightDays) return;
+                    const l = logs[ds][h.id];
+                    if (h.type === 'fixed') { if (h.days.includes(lDate.getDay())) { scheduled++; if (l?.done) hits++; } } 
                     else { if (l?.done) hits++; }
                     if (l?.done && l.n !== null) { sumNum += l.n; countNum++; }
                     if (l?.done && l.t) l.t.forEach(tag => tagCounts[tag] = (tagCounts[tag] || 0) + 1);
                 });
-                let successRate = 0, targetStr = '';
-                if (h.type === 'fixed') { 
-                    successRate = scheduled ? Math.round((hits/scheduled)*100) : 0; 
-                    targetStr = `${h.days.length}/7`; 
-                } else {
-                    const weeks = insightDays === 0 ? Math.max(1, Math.ceil(Object.keys(logs).length / 7)) : Math.ceil(insightDays / 7);
-                    successRate = Math.min(100, Math.round((hits / (h.freq * weeks)) * 100));
-                    targetStr = `${h.freq}/7`;
+
+                let rate = 0, targetStr = '';
+                if (h.type === 'fixed') { rate = scheduled ? Math.round((hits/scheduled)*100) : 0; targetStr = `${h.days.length}/7`; } 
+                else {
+                    const wks = insightDays === 0 ? Math.max(1, Math.ceil(Object.keys(logs).length / 7)) : Math.ceil(insightDays / 7);
+                    rate = Math.min(100, Math.round((hits / (h.freq * wks)) * 100)); targetStr = `${h.freq}/7`;
                 }
+
+                // Smart Decimal Logic
+                let avgDisp = 0;
+                if(countNum) {
+                    const rawAvg = sumNum / countNum;
+                    const isDecimalStep = (h.step % 1 !== 0);
+                    avgDisp = isDecimalStep ? rawAvg.toFixed(1) : Math.round(rawAvg);
+                }
+
                 let cardHTML = `<div class="p-5 bg-zinc-900 border border-zinc-800 rounded-3xl">
                     <div class="flex justify-between items-center mb-4">
                         <span class="u-title text-white font-black">${h.name} <span class="text-zinc-600 ml-1">(${targetStr})</span></span>
-                        <span class="text-green-500 font-black text-xs">${successRate}%</span>
+                        <span class="text-green-500 font-black text-xs">${rate}%</span>
                     </div>
                     <div class="grid grid-cols-2 gap-2">`;
-                if (h.useNum) cardHTML += `<div class="bg-black p-4 rounded-2xl text-center col-span-2"><p class="u-title text-[7px] mb-1">Average</p><p class="text-xl font-black">${countNum ? (sumNum/countNum).toFixed(1) : 0}${h.unit}</p></div>`;
+                if (h.useNum) cardHTML += `<div class="bg-black p-4 rounded-2xl text-center col-span-2"><p class="u-title text-[7px] mb-1">Average</p><p class="text-xl font-black">${avgDisp}${h.unit}</p></div>`;
                 else cardHTML += `<div class="bg-black p-4 rounded-2xl text-center col-span-2"><p class="u-title text-[7px] mb-1">Total Hits</p><p class="text-xl font-black">${hits}</p></div>`;
                 cardHTML += `</div>`;
                 if (Object.keys(tagCounts).length > 0) {
@@ -244,7 +273,7 @@
             });
         }
 
-        // --- CORE V10 LOGIC (LOCKED) ---
+        // --- CORE V10 LOGIC (UNCHANGED) ---
         function getDailyStatus(ds) {
             const di = new Date(ds).getDay();
             const habits = manifest.filter(h => h.type==='fixed' ? h.days.includes(di) : true);
