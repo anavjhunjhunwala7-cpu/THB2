@@ -11,9 +11,18 @@
         .hidden { display: none !important; }
         .fixed-header { position: fixed; top: 0; width: 100%; height: 210px; background: var(--bg); border-bottom: 1px solid var(--border); z-index: 100; padding: 10px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
         .content-area { margin-top: 220px; margin-bottom: 120px; padding: 15px; }
-        .stat-circle { width: 70px; height: 70px; border-radius: 50%; border: 2px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0a0a0a; transition: border-color 0.3s ease; }
+        .stat-circle { width: 70px; height: 70px; border-radius: 50%; border: 2px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0a0a0a; transition: all 0.3s ease; }
         .stat-val { font-size: 13px; font-weight: 900; transition: color 0.3s ease; }
         .stat-lab { font-size: 7px; font-weight: 900; color: #444; text-transform: uppercase; margin-top: 1px; }
+        
+        /* The Glow Animation */
+        @keyframes glow {
+            0% { box-shadow: 0 0 0px var(--neon); transform: scale(1); }
+            50% { box-shadow: 0 0 20px var(--neon); transform: scale(1.05); }
+            100% { box-shadow: 0 0 0px var(--neon); transform: scale(1); }
+        }
+        .glow-active { animation: glow 0.6s ease-out; border-color: var(--neon) !important; }
+
         .habit-card { background: var(--panel); border: 1px solid var(--border); border-radius: 1.25rem; margin-bottom: 10px; display: flex; align-items: center; padding: 16px; position: relative; min-height: 85px; justify-content: space-between; }
         .nn-active { border-left: 4px solid var(--nn); }
         .nn-badge { position: absolute; left: 0; top: 0; background: var(--nn); color: white; font-size: 7px; font-weight: 900; padding: 2px 5px; border-bottom-right-radius: 6px; }
@@ -61,13 +70,13 @@
             </div>
             <div class="flex gap-3">
                 <div id="score-circle" class="stat-circle"><span id="val-score" class="stat-val">0%</span><span class="stat-lab">Score</span></div>
-                <div class="stat-circle" style="border-color: var(--neon)"><span class="stat-val text-green-500" id="val-conquer">0/75</span><span class="stat-lab">Conquer</span></div>
+                <div class="stat-circle" id="conquer-circle" style="border-color: var(--neon)"><span class="stat-val text-green-500" id="val-conquer">0/75</span><span class="stat-lab">Conquer</span></div>
                 <div class="stat-circle"><span class="stat-val" id="val-gone">0</span><span class="stat-lab">Days By</span></div>
             </div>
         </header>
         <main class="content-area">
             <div id="habit-feed"></div>
-            <button onclick="updateAndLock()" class="btn-main btn-neon mt-6 mb-12">UPDATE & LOCK DAY</button>
+            <button id="update-btn" onclick="updateAndLock()" class="btn-main btn-neon mt-6 mb-12">UPDATE & LOCK DAY</button>
         </main>
     </div>
 
@@ -318,7 +327,19 @@
             });
         }
 
-        function updateAndLock() { localStorage.setItem('L_BREAD_V10', JSON.stringify(logs)); renderTrack(); }
+        function updateAndLock() { 
+            localStorage.setItem('L_BREAD_V10', JSON.stringify(logs)); 
+            const circ = document.getElementById('score-circle');
+            circ.classList.add('glow-active');
+            setTimeout(() => circ.classList.remove('glow-active'), 600);
+            const btn = document.getElementById('update-btn');
+            const oldTxt = btn.innerText;
+            btn.innerText = "✓ DATA SYNCED";
+            btn.style.background = "#fff";
+            setTimeout(() => { btn.innerText = oldTxt; btn.style.background = ""; }, 1500);
+            renderTrack(); 
+        }
+
         function openPicker(id) { curHId = id; const h = manifest.find(x => x.id === id); ensureL(id); const l = logs[activeDate][id]; document.getElementById('pick-title').innerText = h.name; renderPickerOptions(); const nBox = document.getElementById('notes-container'); const nInput = document.getElementById('pick-notes'); if(h.notes) { nBox.classList.remove('hidden'); nInput.value = l.notes || ''; nInput.oninput = (e) => { logs[activeDate][curHId].notes = e.target.value; }; } else { nBox.classList.add('hidden'); } document.getElementById('mod-pick').style.display = 'flex'; }
         function renderPickerOptions() { const h = manifest.find(x => x.id === curHId); const l = logs[activeDate][curHId]; const cont = document.getElementById('pick-options'); cont.innerHTML = ''; if(h.useNum) { for(let i=h.min; i<=h.max; i+=h.step) { cont.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl border ${l.n == i ? 'border-green-500 text-green-500' : 'border-zinc-800'} text-center font-bold" onclick="setN(${i})">${i}</div>`; } } if(h.useOpt) { h.tags.forEach(t => { cont.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl border ${l.t.includes(t) ? 'border-green-500 text-green-500' : 'border-zinc-800'} text-center font-bold" onclick="setT('${t}')">${t}</div>`; }); } }
         function setN(v) { logs[activeDate][curHId].n = v; logs[activeDate][curHId].done = true; renderPickerOptions(); }
@@ -343,7 +364,19 @@
             document.getElementById('mod-cal').style.display = 'flex';
         }
         function loadEdit(id) { editId = id; const h = manifest.find(x => x.id === id); document.getElementById('h-name').value = h.name; setMode(h.type); document.getElementById('h-freq').value = h.freq; document.getElementById('h-nn').checked = h.nn; document.getElementById('h-useNum').checked = h.useNum; document.getElementById('h-min').value = h.min; document.getElementById('h-max').value = h.max; document.getElementById('h-unit').value = h.unit; document.getElementById('h-useOpt').checked = h.useOpt; document.getElementById('h-tags').value = h.tags.join(', '); document.getElementById('forge-btn').innerText = "UPDATE"; document.getElementById('cancel-btn').classList.remove('hidden'); nav('build'); }
-        function resetBuilder() { editId = null; document.getElementById('forge-btn').innerText="Forge Habit"; document.getElementById('cancel-btn').classList.add('hidden'); }
+        function resetBuilder() { 
+            editId = null; 
+            document.getElementById('h-name').value = '';
+            document.getElementById('h-freq').value = '';
+            document.getElementById('h-nn').checked = false;
+            document.getElementById('h-useNum').checked = false;
+            document.getElementById('h-useOpt').checked = false;
+            document.getElementById('h-tags').value = '';
+            document.getElementById('h-multi').checked = false;
+            document.getElementById('h-notes').checked = false;
+            document.getElementById('forge-btn').innerText="Forge Habit"; 
+            document.getElementById('cancel-btn').classList.add('hidden'); 
+        }
         function delH(id) { if(confirm('Delete?')) { manifest = manifest.filter(x => x.id !== id); localStorage.setItem('M_BREAD_V10', JSON.stringify(manifest)); renderManifest(); } }
         setQuote(); nav('track');
     </script>
