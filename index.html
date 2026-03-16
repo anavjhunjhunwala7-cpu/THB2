@@ -15,7 +15,6 @@
         .stat-val { font-size: 13px; font-weight: 900; transition: color 0.3s ease; }
         .stat-lab { font-size: 7px; font-weight: 900; color: #444; text-transform: uppercase; margin-top: 1px; }
         
-        /* Specific Pulsing Keyframes */
         @keyframes pulse-green { 0% { box-shadow: 0 0 0px transparent; border-color: #222; } 50% { box-shadow: 0 0 20px var(--neon); border-color: var(--neon); } 100% { box-shadow: 0 0 0px transparent; border-color: #222; } }
         @keyframes pulse-orange { 0% { box-shadow: 0 0 0px transparent; border-color: #222; } 50% { box-shadow: 0 0 20px var(--reset); border-color: var(--reset); } 100% { box-shadow: 0 0 0px transparent; border-color: #222; } }
         @keyframes pulse-red { 0% { box-shadow: 0 0 0px transparent; border-color: #222; } 50% { box-shadow: 0 0 20px var(--nn); border-color: var(--nn); } 100% { box-shadow: 0 0 0px transparent; border-color: #222; } }
@@ -54,6 +53,11 @@
         .nav-arrow.active { color: var(--neon); }
         .quote-banner { font-size: 10px; font-weight: 900; letter-spacing: 0.15em; color: var(--quote); text-transform: uppercase; text-align: center; margin-bottom: 2px; }
         .drag-handle { cursor: grab; padding-right: 12px; color: #333; font-size: 18px; }
+        
+        /* New Intelligence Styles */
+        .period-pill { padding: 8px 16px; border-radius: 20px; background: #111; color: #555; font-size: 9px; font-weight: 900; white-space: nowrap; border: 1px solid #222; }
+        .period-pill.active { background: var(--neon); color: #000; border-color: var(--neon); }
+        .tag-tally { font-size: 9px; font-weight: 800; padding: 4px 8px; background: #000; border: 1px solid #222; border-radius: 6px; }
     </style>
 </head>
 <body>
@@ -70,8 +74,8 @@
             </div>
             <div class="flex gap-3">
                 <div id="score-circle" class="stat-circle"><span id="val-score" class="stat-val">0%</span><span class="stat-lab">Score</span></div>
-                <div id="conquer-circle" class="stat-circle"><span class="stat-val" id="val-conquer">0/75</span><span class="stat-lab">Conquered</span></div>
-                <div id="days-circle" class="stat-circle"><span class="stat-val" id="val-gone">0</span><span class="stat-lab">Days Gone</span></div>
+                <div id="conquer-circle" class="stat-circle"><span class="stat-val" id="val-conquer">0/75</span><span class="stat-lab">Conquer</span></div>
+                <div id="days-circle" class="stat-circle"><span class="stat-val" id="val-gone">0</span><span class="stat-lab">Days By</span></div>
             </div>
         </header>
         <main class="content-area">
@@ -133,20 +137,38 @@
                 <button onclick="resetBuilder()" id="cancel-btn" class="hidden w-full py-2 text-zinc-600 font-bold text-[9px]">CANCEL EDIT</button>
             </div>
             <div id="manifest-list" class="mt-8 space-y-2"></div>
+            
+            <div class="mt-12 p-6 bg-zinc-900 rounded-2xl border border-zinc-800 border-dashed">
+                <h2 class="u-title text-zinc-500 mb-4 text-center">Data Command Vault</h2>
+                <textarea id="backup-box" class="input-dark text-[8px] h-20 mb-3" placeholder="Paste backup string here..."></textarea>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="copyBackup()" class="py-3 bg-zinc-800 text-white font-black text-[9px] rounded-xl uppercase">Copy Backup</button>
+                    <button onclick="restoreBackup()" class="py-3 bg-red-900/30 text-red-500 font-black text-[9px] border border-red-500/50 rounded-xl uppercase">Restore Data</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <div id="view-insights" class="hidden">
         <div class="p-6 pb-32">
             <h2 class="text-xl font-black uppercase italic mb-6 text-center">Intelligence</h2>
-            <div id="insights-list" class="space-y-3"></div>
+            <div class="flex overflow-x-auto gap-2 mb-8 pb-2 scrollbar-hide" id="period-wrap">
+                <button class="period-pill active" onclick="setPeriod(7, this)">7D</button>
+                <button class="period-pill" onclick="setPeriod(14, this)">14D</button>
+                <button class="period-pill" onclick="setPeriod(21, this)">21D</button>
+                <button class="period-pill" onclick="setPeriod(28, this)">28D</button>
+                <button class="period-pill" onclick="setPeriod(60, this)">2M</button>
+                <button class="period-pill" onclick="setPeriod(180, this)">6M</button>
+                <button class="period-pill" onclick="setPeriod(0, this)">ALL</button>
+            </div>
+            <div id="insights-list" class="space-y-4"></div>
         </div>
     </div>
 
     <div id="mod-pick" class="modal">
         <div class="flex justify-between items-center mb-6"><button onclick="clearEntry()" class="text-orange-500 text-3xl font-black">↻</button><h3 id="pick-title" class="u-title text-white">LOG</h3><button onclick="closePickerFinal()" class="text-green-500 text-3xl font-black">✓</button></div>
         <div id="pick-options" class="grid grid-cols-2 gap-3 mb-6"></div>
-        <div id="notes-container" class="hidden space-y-2"><span class="u-title">Notes</span><textarea id="pick-notes" class="input-dark h-32 focus:border-green-500" placeholder="Type notes here..."></textarea></div>
+        <div id="notes-container" class="hidden space-y-2"><span class="u-title">Notes</span><textarea id="pick-notes" class="input-dark h-32" placeholder="Type notes here..."></textarea></div>
     </div>
 
     <div id="mod-cal" class="modal">
@@ -163,19 +185,130 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <script>
-        // --- DATA LAYER (V10 PERSISTENCE) ---
         let manifest = JSON.parse(localStorage.getItem('M_BREAD_V10')) || [];
         let logs = JSON.parse(localStorage.getItem('L_BREAD_V10')) || {};
         let config = JSON.parse(localStorage.getItem('C_BREAD_V10')) || { goal: 75, pass: 100 };
-        
         let activeDate = new Date().toISOString().split('T')[0];
         let todayStr = new Date().toISOString().split('T')[0];
-        let buildMode = 'fixed', editId = null, curHId = null;
+        let buildMode = 'fixed', editId = null, curHId = null, insightDays = 7;
 
         const quotes = ["DISCIPLINE OR REGRET", "WIN THE DAY", "KILL THE EXCUSE", "OWN YOUR LIFE", "DO THE WORK", "STAY HARD"];
         function setQuote() { document.getElementById('daily-quote').innerText = quotes[Math.floor(Math.random() * quotes.length)]; }
 
-        // --- CORE LOGIC (Milestones & Traffic Lights) ---
+        // --- INTELLIGENCE ENGINE ---
+        function setPeriod(d, btn) {
+            insightDays = d;
+            document.querySelectorAll('.period-pill').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            renderInsights();
+        }
+
+        function renderInsights() {
+            const list = document.getElementById('insights-list'); list.innerHTML = '';
+            const now = new Date();
+            
+            manifest.forEach(h => {
+                let hits = 0, scheduled = 0, sumNum = 0, countNum = 0, tagCounts = {};
+                
+                Object.keys(logs).forEach(dateStr => {
+                    const logDate = new Date(dateStr);
+                    const diffDays = (now - logDate) / (1000 * 60 * 60 * 24);
+                    if (insightDays !== 0 && diffDays > insightDays) return;
+
+                    const l = logs[dateStr][h.id];
+                    const di = logDate.getDay();
+                    
+                    // Logic for Scheduled vs Done
+                    if (h.type === 'fixed') {
+                        if (h.days.includes(di)) {
+                            scheduled++;
+                            if (l?.done) hits++;
+                        }
+                    } else {
+                        // Flex is handled differently in summary calculation
+                        if (l?.done) hits++;
+                    }
+
+                    // Numeric Aggregation
+                    if (l?.done && l.n !== null) {
+                        sumNum += l.n;
+                        countNum++;
+                    }
+
+                    // Tag Tallying
+                    if (l?.done && l.t && l.t.length > 0) {
+                        l.t.forEach(tag => {
+                            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+                        });
+                    }
+                });
+
+                // Success Rate Calculation
+                let successRate = 0;
+                if (h.type === 'fixed') {
+                    successRate = scheduled ? Math.round((hits/scheduled)*100) : 0;
+                } else {
+                    const weeks = insightDays === 0 ? 1 : Math.ceil(insightDays / 7);
+                    const target = h.freq * weeks;
+                    successRate = target ? Math.round((hits/target)*100) : 0;
+                }
+
+                // UI Assembly
+                let cardHTML = `<div class="p-5 bg-zinc-900 border border-zinc-800 rounded-3xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="u-title text-white font-black">${h.name}</span>
+                        <span class="text-green-500 font-black text-xs">${successRate}%</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">`;
+                
+                if (h.useNum) {
+                    const avg = countNum ? (sumNum/countNum).toFixed(1) : 0;
+                    cardHTML += `<div class="bg-black p-3 rounded-2xl text-center"><p class="u-title text-[7px]">Average</p><p class="text-lg font-black">${avg}${h.unit}</p></div>`;
+                } else {
+                    cardHTML += `<div class="bg-black p-3 rounded-2xl text-center"><p class="u-title text-[7px]">Hits</p><p class="text-lg font-black">${hits}</p></div>`;
+                }
+
+                cardHTML += `<div class="bg-black p-3 rounded-2xl text-center"><p class="u-title text-[7px]">Scheduled</p><p class="text-lg font-black">${h.type === 'fixed' ? scheduled : 'FLEX'}</p></div></div>`;
+
+                // Tag Display
+                if (Object.keys(tagCounts).length > 0) {
+                    cardHTML += `<div class="flex flex-wrap gap-2 mt-4">`;
+                    for (const [tag, count] of Object.entries(tagCounts)) {
+                        cardHTML += `<div class="tag-tally">${tag}: <span class="text-green-500">${count}</span></div>`;
+                    }
+                    cardHTML += `</div>`;
+                }
+
+                cardHTML += `</div>`;
+                list.innerHTML += cardHTML;
+            });
+        }
+
+        // --- DATA VAULT (BACKUP/RESTORE) ---
+        function copyBackup() {
+            const data = { m: manifest, l: logs, c: config };
+            const str = btoa(JSON.stringify(data));
+            document.getElementById('backup-box').value = str;
+            navigator.clipboard.writeText(str);
+            alert("BACKUP COPIED TO CLIPBOARD");
+        }
+
+        function restoreBackup() {
+            const str = document.getElementById('backup-box').value;
+            if(!str) return alert("PASTE BACKUP STRING FIRST");
+            if(confirm("THIS WILL OVERWRITE ALL CURRENT DATA. CONTINUE?")) {
+                try {
+                    const data = JSON.parse(atob(str));
+                    manifest = data.m; logs = data.l; config = data.c;
+                    localStorage.setItem('M_BREAD_V10', JSON.stringify(manifest));
+                    localStorage.setItem('L_BREAD_V10', JSON.stringify(logs));
+                    localStorage.setItem('C_BREAD_V10', JSON.stringify(config));
+                    window.location.reload();
+                } catch(e) { alert("INVALID BACKUP STRING"); }
+            }
+        }
+
+        // --- CORE NAVIGATION & UI (V10 LOCKED) ---
         function getDailyStatus(ds) {
             const di = new Date(ds).getDay();
             const habits = manifest.filter(h => h.type==='fixed' ? h.days.includes(di) : true);
@@ -190,27 +323,16 @@
             const currentStatus = getDailyStatus(activeDate);
             const scoreCirc = document.getElementById('score-circle');
             const conqCirc = document.getElementById('conquer-circle');
-            
-            // 1. Always pulse the score circle in the correct traffic light color
             scoreCirc.classList.remove('glow-win', 'glow-warn', 'glow-fail');
-            void scoreCirc.offsetWidth; // Force Reflow
+            void scoreCirc.offsetWidth;
             if(currentStatus.score >= config.pass) scoreCirc.classList.add('glow-win');
             else if(currentStatus.score >= (config.pass * 0.7)) scoreCirc.classList.add('glow-warn');
             else scoreCirc.classList.add('glow-fail');
-
-            // 2. Only pulse the Conquer circle if we just flipped to a WIN
             if (!oldPass && currentStatus.pass) {
                 conqCirc.classList.remove('glow-win');
                 void conqCirc.offsetWidth;
                 conqCirc.classList.add('glow-win');
             }
-        }
-
-        function saveConfig() { 
-            config.goal = parseInt(document.getElementById('c-goal').value) || 75;
-            config.pass = parseInt(document.getElementById('c-pass').value) || 100;
-            localStorage.setItem('C_BREAD_V10', JSON.stringify(config));
-            renderTrack();
         }
 
         function nav(v) {
@@ -223,60 +345,9 @@
             else renderTrack();
         }
 
-        function changeDay(offset) {
-            let d = new Date(activeDate); d.setDate(d.getDate() + offset);
-            let target = d.toISOString().split('T')[0];
-            if (target > todayStr) return;
-            activeDate = target; setQuote(); renderTrack();
-        }
-
-        function toggleCheck(id) {
-            const oldPass = getDailyStatus(activeDate).pass;
-            if(!logs[activeDate]) logs[activeDate] = {};
-            if(!logs[activeDate][id]) logs[activeDate][id] = { done: false, n: null, t: [], notes: '' };
-            logs[activeDate][id].done = !logs[activeDate][id].done;
-            renderTrack();
-            triggerSelectiveGlow(oldPass);
-        }
-
-        function syncHeader() {
-            const d = new Date(activeDate);
-            document.getElementById('head-date').innerText = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-            document.getElementById('head-day').innerText = d.toLocaleDateString('en-GB', { weekday: 'long' });
-            const s = getDailyStatus(activeDate);
-            
-            const scoreVal = document.getElementById('val-score');
-            scoreVal.innerText = s.score + '%';
-            
-            // Traffic Light Text
-            if (s.score >= config.pass) scoreVal.style.color = 'var(--neon)';
-            else if (s.score >= (config.pass * 0.7)) scoreVal.style.color = 'var(--reset)';
-            else scoreVal.style.color = 'var(--nn)';
-
-            let conquered = 0; Object.keys(logs).forEach(date => { if(getDailyStatus(date).pass) conquered++; });
-            document.getElementById('val-conquer').innerText = `${conquered}/${config.goal}`;
-            
-            const allDates = Object.keys(logs).sort();
-            document.getElementById('val-gone').innerText = allDates.length ? Math.ceil(Math.abs(new Date() - new Date(allDates[0]))/86400000) : 0;
-            
-            // Persistence Fix: Sync inputs to current config
-            document.getElementById('c-goal').value = config.goal;
-            document.getElementById('c-pass').value = config.pass;
-        }
-
-        // --- MANIFEST & FORM ---
-        function saveHabit() {
-            const h = { id: editId || 'h' + Date.now(), name: document.getElementById('h-name').value, type: buildMode, days: Array.from(document.querySelectorAll('.day-btn.active')).map(b => parseInt(b.dataset.d)), freq: parseInt(document.getElementById('h-freq').value || 0), nn: document.getElementById('h-nn').checked, useNum: document.getElementById('h-useNum').checked, min: parseFloat(document.getElementById('h-min').value || 0), max: parseFloat(document.getElementById('h-max').value || 0), step: parseFloat(document.getElementById('h-step').value || 1), unit: document.getElementById('h-unit').value, useOpt: document.getElementById('h-useOpt').checked, tags: document.getElementById('h-tags').value.split(',').map(t => t.trim()).filter(t => t), multi: document.getElementById('h-multi').checked, notes: document.getElementById('h-notes').checked };
-            if(!h.name) return;
-            editId ? manifest[manifest.findIndex(x => x.id === editId)] = h : manifest.push(h);
-            localStorage.setItem('M_BREAD_V10', JSON.stringify(manifest));
-            resetBuilder(); renderManifest(); 
-        }
-
         function renderTrack() {
             const feed = document.getElementById('habit-feed'); feed.innerHTML = '';
-            const curr = new Date(activeDate);
-            const dayIdx = curr.getDay();
+            const dayIdx = new Date(activeDate).getDay();
             const habits = manifest.filter(h => h.type==='fixed' ? h.days.includes(dayIdx) : true);
             habits.forEach(h => {
                 const l = logs[activeDate]?.[h.id] || { done: false, n: null, t: [], notes: '' };
@@ -289,40 +360,55 @@
             syncHeader();
         }
 
-        // --- INTELLIGENCE (INSIGHTS) ---
-        function renderInsights() {
-            const list = document.getElementById('insights-list'); list.innerHTML = '';
-            manifest.forEach(h => {
-                let streak = 0, hits = 0, scheduled = 0;
-                const sortedDates = Object.keys(logs).sort().reverse();
-                sortedDates.forEach(d => {
-                    const di = new Date(d).getDay();
-                    const isSch = h.type === 'fixed' ? h.days.includes(di) : true;
-                    if(isSch) {
-                        scheduled++;
-                        if(logs[d][h.id]?.done) { hits++; streak++; }
-                        else if (d !== todayStr) { /* stop streak if missed in past */ }
-                    }
-                });
-                const rate = scheduled ? Math.round((hits/scheduled)*100) : 0;
-                list.innerHTML += `<div class="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl"><div class="flex justify-between items-center mb-2"><span class="u-title text-white">${h.name}</span><span class="text-green-500 font-black text-xs">${rate}%</span></div><div class="grid grid-cols-2 gap-2"><div class="bg-black p-2 rounded-xl text-center"><p class="u-title">Streak</p><p class="text-lg font-black">${streak}</p></div><div class="bg-black p-2 rounded-xl text-center"><p class="u-title">Total</p><p class="text-lg font-black">${hits}</p></div></div></div>`;
-            });
+        function syncHeader() {
+            const d = new Date(activeDate);
+            document.getElementById('head-date').innerText = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+            document.getElementById('head-day').innerText = d.toLocaleDateString('en-GB', { weekday: 'long' });
+            const s = getDailyStatus(activeDate);
+            const scoreVal = document.getElementById('val-score');
+            scoreVal.innerText = s.score + '%';
+            if (s.score >= config.pass) scoreVal.style.color = 'var(--neon)';
+            else if (s.score >= (config.pass * 0.7)) scoreVal.style.color = 'var(--reset)';
+            else scoreVal.style.color = 'var(--nn)';
+            let conquered = 0; Object.keys(logs).forEach(date => { if(getDailyStatus(date).pass) conquered++; });
+            document.getElementById('val-conquer').innerText = `${conquered}/${config.goal}`;
+            const allDates = Object.keys(logs).sort();
+            document.getElementById('val-gone').innerText = allDates.length ? Math.ceil(Math.abs(new Date() - new Date(allDates[0]))/86400000) : 0;
+            document.getElementById('c-goal').value = config.goal;
+            document.getElementById('c-pass').value = config.pass;
         }
 
-        // --- PICKER & UTILITIES (V10 LOCK) ---
-        function openPicker(id) { curHId = id; const h = manifest.find(x => x.id === id); if(!logs[activeDate]) logs[activeDate] = {}; if(!logs[activeDate][id]) logs[activeDate][id] = { done: false, n: null, t: [], notes: '' }; const l = logs[activeDate][id]; document.getElementById('pick-title').innerText = h.name; renderPickerOptions(); const nBox = document.getElementById('notes-container'); if(h.notes) { nBox.classList.remove('hidden'); document.getElementById('pick-notes').value = l.notes || ''; document.getElementById('pick-notes').oninput = (e) => { logs[activeDate][curHId].notes = e.target.value; }; } else { nBox.classList.add('hidden'); } document.getElementById('mod-pick').style.display = 'flex'; }
+        function toggleCheck(id) {
+            const oldPass = getDailyStatus(activeDate).pass;
+            if(!logs[activeDate]) logs[activeDate] = {};
+            if(!logs[activeDate][id]) logs[activeDate][id] = { done: false, n: null, t: [], notes: '' };
+            logs[activeDate][id].done = !logs[activeDate][id].done;
+            renderTrack();
+            triggerSelectiveGlow(oldPass);
+        }
+
+        function saveConfig() { 
+            config.goal = parseInt(document.getElementById('c-goal').value) || 75;
+            config.pass = parseInt(document.getElementById('c-pass').value) || 100;
+            localStorage.setItem('C_BREAD_V10', JSON.stringify(config));
+            renderTrack();
+        }
+
+        function setMode(m) { buildMode = m; document.getElementById('mode-fixed').classList.toggle('bg-zinc-800', m==='fixed'); document.getElementById('mode-flex').classList.toggle('bg-zinc-800', m==='flex'); document.getElementById('days-row').classList.toggle('hidden', m==='flex'); document.getElementById('flex-row').classList.toggle('hidden', m==='fixed'); }
+        function toggleDay(btn) { btn.classList.toggle('active'); }
+        function changeDay(offset) { let d = new Date(activeDate); d.setDate(d.getDate() + offset); let target = d.toISOString().split('T')[0]; if (target > todayStr) return; activeDate = target; setQuote(); renderTrack(); }
+        function openPicker(id) { curHId = id; const h = manifest.find(x => x.id === id); if(!logs[activeDate]) logs[activeDate] = {}; if(!logs[activeDate][id]) logs[activeDate][id] = { done: false, n: null, t: [], notes: '' }; const l = logs[activeDate][id]; document.getElementById('pick-title').innerText = h.name; renderPickerOptions(); if(h.notes) { document.getElementById('notes-container').classList.remove('hidden'); document.getElementById('pick-notes').value = l.notes || ''; document.getElementById('pick-notes').oninput = (e) => { logs[activeDate][curHId].notes = e.target.value; }; } else { document.getElementById('notes-container').classList.add('hidden'); } document.getElementById('mod-pick').style.display = 'flex'; }
         function renderPickerOptions() { const h = manifest.find(x => x.id === curHId); const l = logs[activeDate][curHId]; const cont = document.getElementById('pick-options'); cont.innerHTML = ''; if(h.useNum) { for(let i=h.min; i<=h.max; i+=h.step) { cont.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl border ${l.n == i ? 'border-green-500 text-green-500' : 'border-zinc-800'} text-center font-bold" onclick="setN(${i})">${i}</div>`; } } if(h.useOpt) { h.tags.forEach(t => { cont.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl border ${l.t.includes(t) ? 'border-green-500 text-green-500' : 'border-zinc-800'} text-center font-bold" onclick="setT('${t}')">${t}</div>`; }); } }
         function setN(v) { const oldPass = getDailyStatus(activeDate).pass; logs[activeDate][curHId].n = v; logs[activeDate][curHId].done = true; triggerSelectiveGlow(oldPass); renderPickerOptions(); }
         function setT(t) { const oldPass = getDailyStatus(activeDate).pass; const h = manifest.find(x => x.id === curHId); let tags = logs[activeDate][curHId].t || []; tags = h.multi ? (tags.includes(t) ? tags.filter(x => x !== t) : [...tags, t]) : [t]; logs[activeDate][curHId].t = tags; logs[activeDate][curHId].done = true; triggerSelectiveGlow(oldPass); renderPickerOptions(); }
         function closePickerFinal() { document.getElementById('mod-pick').style.display = 'none'; renderTrack(); }
         function clearEntry() { logs[activeDate][curHId] = { done: false, n: null, t: [], notes: '' }; openPicker(curHId); }
-        function openCalendar() { const g = document.getElementById('cal-grid'); g.innerHTML = ''; const now = new Date(activeDate); document.getElementById('cal-head-day').innerText = now.toLocaleDateString('en-GB', { weekday: 'long' }); document.getElementById('cal-head-date').innerText = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }); const startDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay(); const offset = startDay === 0 ? 6 : startDay - 1; const last = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(); for(let i=0; i<offset; i++) g.innerHTML += `<div></div>`; for(let d=1; d<=last; d++) { const ds = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; const r = getDailyStatus(ds); let highlightClass = logs[ds] ? (r.pass ? 'cal-win' : 'cal-loss') : ''; g.innerHTML += `<div class="cal-day-cell ${highlightClass} ${ds === todayStr ? 'ring-2 ring-white' : ''}" onclick="activeDate='${ds}'; closeM('mod-cal');">${d}${logs[ds] ? `<span class="cal-perc">${r.score}%</span>` : ''}</div>`; } document.getElementById('mod-cal').style.display = 'flex'; }
         function closeM(m) { document.getElementById(m).style.display = 'none'; renderTrack(); }
-        function resetBuilder() { editId = null; document.getElementById('h-name').value = ''; document.getElementById('h-freq').value = ''; document.getElementById('h-nn').checked = false; document.getElementById('h-useNum').checked = false; document.getElementById('h-min').value = ''; document.getElementById('h-max').value = ''; document.getElementById('h-step').value = ''; document.getElementById('h-unit').value = ''; document.getElementById('h-useOpt').checked = false; document.getElementById('h-tags').value = ''; document.getElementById('h-multi').checked = false; document.getElementById('h-notes').checked = false; document.querySelectorAll('.day-btn').forEach(btn => btn.classList.add('active')); document.getElementById('forge-btn').innerText="Forge Habit"; document.getElementById('cancel-btn').classList.add('hidden'); }
+        function openCalendar() { const g = document.getElementById('cal-grid'); g.innerHTML = ''; const now = new Date(activeDate); document.getElementById('cal-head-day').innerText = now.toLocaleDateString('en-GB', { weekday: 'long' }); document.getElementById('cal-head-date').innerText = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }); const startDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay(); const offset = startDay === 0 ? 6 : startDay - 1; const last = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(); for(let i=0; i<offset; i++) g.innerHTML += `<div></div>`; for(let d=1; d<=last; d++) { const ds = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; const r = getDailyStatus(ds); let highlightClass = logs[ds] ? (r.pass ? 'cal-win' : 'cal-loss') : ''; g.innerHTML += `<div class="cal-day-cell ${highlightClass} ${ds === todayStr ? 'ring-2 ring-white' : ''}" onclick="activeDate='${ds}'; closeM('mod-cal');">${d}${logs[ds] ? `<span class="cal-perc">${r.score}%</span>` : ''}</div>`; } document.getElementById('mod-cal').style.display = 'flex'; }
         function updateAndLock() { localStorage.setItem('L_BREAD_V10', JSON.stringify(logs)); renderTrack(); }
+        function resetBuilder() { editId = null; document.getElementById('h-name').value = ''; document.getElementById('h-freq').value = ''; document.getElementById('h-nn').checked = false; document.getElementById('h-useNum').checked = false; document.getElementById('h-min').value = ''; document.getElementById('h-max').value = ''; document.getElementById('h-step').value = ''; document.getElementById('h-unit').value = ''; document.getElementById('h-useOpt').checked = false; document.getElementById('h-tags').value = ''; document.getElementById('h-multi').checked = false; document.getElementById('h-notes').checked = false; document.querySelectorAll('.day-btn').forEach(btn => btn.classList.add('active')); document.getElementById('forge-btn').innerText="Forge Habit"; document.getElementById('cancel-btn').classList.add('hidden'); }
+        function saveHabit() { const h = { id: editId || 'h' + Date.now(), name: document.getElementById('h-name').value, type: buildMode, days: Array.from(document.querySelectorAll('.day-btn.active')).map(b => parseInt(b.dataset.d)), freq: parseInt(document.getElementById('h-freq').value || 0), nn: document.getElementById('h-nn').checked, useNum: document.getElementById('h-useNum').checked, min: parseFloat(document.getElementById('h-min').value || 0), max: parseFloat(document.getElementById('h-max').value || 0), step: parseFloat(document.getElementById('h-step').value || 1), unit: document.getElementById('h-unit').value, useOpt: document.getElementById('h-useOpt').checked, tags: document.getElementById('h-tags').value.split(',').map(t => t.trim()).filter(t => t), multi: document.getElementById('h-multi').checked, notes: document.getElementById('h-notes').checked }; if(!h.name) return; editId ? manifest[manifest.findIndex(x => x.id === editId)] = h : manifest.push(h); localStorage.setItem('M_BREAD_V10', JSON.stringify(manifest)); resetBuilder(); renderManifest(); }
         function renderManifest() { const list = document.getElementById('manifest-list'); list.innerHTML = ''; manifest.forEach((h) => { list.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl flex justify-between border border-zinc-800 items-center" data-id="${h.id}"><div class="flex items-center"><span class="drag-handle">☰</span><span class="font-black uppercase text-[10px]">${h.name}</span></div><div class="flex gap-4"><button onclick="loadEdit('${h.id}')" class="text-zinc-500 font-black text-[9px]">EDIT</button><button onclick="delH('${h.id}')" class="text-red-500 font-black text-[10px]">✕</button></div></div>`; }); new Sortable(list, { handle: '.drag-handle', animation: 150, onEnd: () => { const ids = Array.from(list.children).map(el => el.dataset.id); manifest.sort((a,b) => ids.indexOf(a.id) - ids.indexOf(b.id)); localStorage.setItem('M_BREAD_V10', JSON.stringify(manifest)); }}); }
-        function setMode(m) { buildMode = m; document.getElementById('mode-fixed').classList.toggle('bg-zinc-800', m==='fixed'); document.getElementById('mode-flex').classList.toggle('bg-zinc-800', m==='flex'); document.getElementById('days-row').classList.toggle('hidden', m==='flex'); document.getElementById('flex-row').classList.toggle('hidden', m==='fixed'); }
-        function toggleDay(btn) { btn.classList.toggle('active'); }
         function loadEdit(id) { editId = id; const h = manifest.find(x => x.id === id); document.getElementById('h-name').value = h.name; setMode(h.type); document.getElementById('h-freq').value = h.freq; document.getElementById('h-nn').checked = h.nn; document.getElementById('h-useNum').checked = h.useNum; document.getElementById('h-min').value = h.min; document.getElementById('h-max').value = h.max; document.getElementById('h-step').value = h.step; document.getElementById('h-unit').value = h.unit; document.getElementById('h-useOpt').checked = h.useOpt; document.getElementById('h-tags').value = h.tags.join(', '); document.getElementById('h-multi').checked = h.multi; document.getElementById('h-notes').checked = h.notes; document.getElementById('forge-btn').innerText = "UPDATE"; document.getElementById('cancel-btn').classList.remove('hidden'); nav('build'); }
         function delH(id) { if(confirm('Delete?')) { manifest = manifest.filter(x => x.id !== id); localStorage.setItem('M_BREAD_V10', JSON.stringify(manifest)); renderManifest(); } }
 
