@@ -7,42 +7,41 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --neon: #22c55e; --bg: #000000; --panel: #111111; --border: #222222; --nn: #ef4444; }
-        body { background: var(--bg); color: #fff; font-family: -apple-system, system-ui, sans-serif; margin: 0; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+        body { background: var(--bg); color: #fff; font-family: -apple-system, system-ui, sans-serif; margin: 0; -webkit-font-smoothing: antialiased; }
         
-        /* HEADER LOGIC */
-        .header-wrap { position: fixed; top: 0; width: 100%; background: var(--bg); border-bottom: 1px solid var(--border); z-index: 100; padding: 15px 20px; }
-        .content-area { margin-top: 240px; margin-bottom: 120px; padding: 20px; }
-        .build-area { margin-top: 20px; } /* Build doesn't need the massive fixed header */
+        /* HEADER & STATS */
+        .fixed-header { position: fixed; top: 0; width: 100%; height: 260px; background: var(--bg); border-bottom: 1px solid var(--border); z-index: 100; padding: 15px 20px; display: flex; flex-direction: column; align-items: center; }
+        .quote-bar { width: 100%; text-align: center; padding: 6px; background: rgba(255,255,255,0.03); border-radius: 8px; margin-bottom: 12px; }
+        .quote-text { font-size: 9px; font-weight: 800; color: #555; letter-spacing: 0.1em; text-transform: uppercase; }
+        
+        .stat-circle { width: 70px; height: 70px; border-radius: 50%; border: 2px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0a0a0a; }
+        .stat-val { font-size: 14px; font-weight: 900; }
+        .stat-lab { font-size: 7px; font-weight: 900; color: #444; text-transform: uppercase; margin-top: 2px; }
 
-        .quote-bar { width: 100%; text-align: center; padding: 6px; background: #0a0a0a; border: 1px solid #111; border-radius: 6px; margin-bottom: 15px; }
-        .quote-text { font-size: 9px; font-weight: 800; color: #444; letter-spacing: 0.1em; text-transform: uppercase; }
+        /* CONTENT */
+        .content-area { margin-top: 270px; margin-bottom: 100px; padding: 20px; }
+        .u-title { font-size: 9px; font-weight: 900; letter-spacing: 0.15em; text-transform: uppercase; color: #444; }
 
-        /* INPUTS */
-        input[type="text"], input[type="number"], textarea { 
-            background: #0a0a0a; border: 1px solid #222; color: white; 
-            padding: 12px; border-radius: 12px; width: 100%; outline: none; 
-            font-size: 16px; height: 50px;
-        }
-        .header-input { background: #111; border: 1px solid #333; border-radius: 6px; font-size: 11px; font-weight: 900; color: var(--neon); width: 45px; text-align: center; padding: 4px; }
+        /* INPUTS (Sophisticated Height) */
+        input[type="text"], input[type="number"], textarea { background: #0a0a0a; border: 1px solid #222; color: white; padding: 12px 16px; border-radius: 12px; width: 100%; outline: none; font-size: 15px; height: 50px; }
+        textarea { height: 100px !important; }
 
-        /* NAV */
-        .fixed-nav { position: fixed; bottom: 0; width: 100%; background: #000; border-top: 1px solid var(--border); z-index: 200; display: flex; height: 80px; padding-bottom: env(safe-area-inset-bottom); }
-        .nav-link { flex: 1; display: flex; align-items: center; justify-content: center; color: #444; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; }
-        .nav-link.active { color: var(--neon); border-top: 2px solid var(--neon); }
-
-        /* CARDS */
+        /* HABIT CARDS */
         .habit-card { background: var(--panel); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1.25rem; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
-        .habit-card.nn-fail { border-left: 4px solid var(--nn); }
-        
-        .pill { background: rgba(34,197,94,0.1); border: 1px solid var(--neon); color: var(--neon); padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; margin: 2px; }
-        .check-box { width: 42px; height: 42px; border: 2px solid #333; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .habit-card.nn-fail { border-left: 4px solid var(--nn); background: rgba(239,68,68,0.05); }
+        .pill { background: rgba(34,197,94,0.1); border: 1px solid var(--neon); color: var(--neon); padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; margin: 2px; }
+        .check-box { width: 44px; height: 44px; border: 2px solid #333; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .check-box.active { background: var(--neon); border-color: var(--neon); color: #000; }
 
-        /* MODALS */
-        .modal { position: fixed; inset: 0; background: #000; z-index: 1000; display: none; flex-direction: column; padding: 25px; }
-        .cal-grid { display: grid; grid-cols-7 gap: 2px; }
-        .cal-day { aspect-ratio: 1; border: 1px solid #222; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; }
+        /* CALENDAR */
+        .cal-day { aspect-ratio: 0.8; border: 1px solid #222; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; }
         
+        /* NAV */
+        .fixed-nav { position: fixed; bottom: 0; width: 100%; background: #000; border-top: 1px solid var(--border); z-index: 200; display: flex; height: 80px; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; }
+        .nav-link.active { color: var(--neon); border-top: 2px solid var(--neon); }
+
+        .modal { position: fixed; inset: 0; background: #000; z-index: 1000; display: none; flex-direction: column; padding: 25px; }
         .day-btn { width: 100%; aspect-ratio: 1; background: #111; border: 1px solid #222; border-radius: 8px; font-size: 10px; font-weight: 900; color: #444; }
         .day-btn.active { background: var(--neon); color: #000; }
     </style>
@@ -50,31 +49,40 @@
 <body>
 
     <div id="view-track">
-        <header class="header-wrap">
-            <div class="quote-bar"><span class="quote-text">Suffer the pain of discipline or the pain of regret.</span></div>
-            <div class="flex flex-col items-center cursor-pointer" onclick="openCalendar()">
-                <p id="display-day" class="text-[10px] font-black text-green-500 uppercase tracking-widest mb-1">---</p>
-                <h2 id="display-date" class="text-4xl font-black italic uppercase tracking-tighter">---</h2>
+        <header class="fixed-header">
+            <div class="quote-bar"><span class="quote-text" id="dynamic-quote">Earning the right to be proud.</span></div>
+            <div id="streak-disp" class="absolute left-6 top-14 text-orange-500 font-black italic text-xs">🔥 0</div>
+            
+            <div class="cursor-pointer flex flex-col items-center mb-4" onclick="openCalendar()">
+                <p id="display-day" class="u-title text-green-500 mb-0">---</p>
+                <h2 id="display-date" class="text-4xl font-black italic uppercase tracking-tighter leading-none">---</h2>
             </div>
-            <div class="flex justify-center gap-6 mt-4">
-                <div class="flex flex-col items-center"><span class="text-[7px] font-black mb-1">PASS %</span><input type="number" id="global-target" value="80" class="header-input"></div>
-                <div class="w-16 h-16 rounded-full border-2 border-zinc-800 flex items-center justify-center bg-zinc-900"><span class="text-sm font-black" id="score-val">0%</span></div>
-                <div class="flex flex-col items-center"><span class="text-[7px] font-black mb-1">GOAL</span><input type="number" id="campaign-goal" value="365" class="header-input"></div>
+
+            <div class="flex gap-4">
+                <div class="stat-circle" id="ring-score"><span class="stat-val" id="val-score">0%</span><span class="stat-lab">Today</span></div>
+                <div class="stat-circle" style="border-color: var(--neon)"><span class="stat-val text-green-500" id="val-conquer">0</span><span class="stat-lab">Conquer</span></div>
+                <div class="stat-circle"><span class="stat-val" id="val-gone">0</span><span class="stat-lab">Days By</span></div>
             </div>
         </header>
+
         <main class="content-area">
-            <div id="habit-feed" class="space-y-3"></div>
-            <button onclick="alert('Day Logged')" class="w-full py-5 mt-6 bg-zinc-900 border border-zinc-700 text-white font-black uppercase rounded-2xl text-[10px] tracking-widest">Conquer Today</button>
+            <div id="habit-feed" class="space-y-2"></div>
+            <button onclick="conquerDay()" class="w-full py-5 mt-8 bg-zinc-900 border border-zinc-800 text-white font-black uppercase rounded-2xl tracking-[0.3em] text-[10px]">Conquer Today</button>
         </main>
     </div>
 
-    <div id="view-build" class="hidden p-6 pb-24">
-        <h2 class="text-center font-black italic uppercase tracking-widest text-xl mb-8">Constructor</h2>
-        <div class="space-y-4 bg-[#0a0a0a] p-6 rounded-3xl border border-zinc-900">
-            <input type="text" id="h-name" placeholder="HABIT NAME">
+    <div id="view-build" class="hidden p-6 pb-32">
+        <div class="flex justify-between items-center mb-8 px-2">
+            <div class="flex flex-col"><span class="u-title" style="font-size:7px">Pass %</span><input type="number" id="global-target" value="80" class="w-12 bg-transparent text-green-500 font-black border-b border-zinc-800"></div>
+            <h2 class="text-xl font-black italic uppercase italic">Constructor</h2>
+            <div class="flex flex-col"><span class="u-title" style="font-size:7px">Goal</span><input type="number" id="campaign-goal" value="365" class="w-12 bg-transparent text-blue-500 font-black border-b border-zinc-800 text-right"></div>
+        </div>
+
+        <div class="space-y-4 bg-[#0a0a0a] p-6 rounded-[2rem] border border-zinc-900">
+            <input type="text" id="h-name" placeholder="HABIT NAME" class="font-bold">
             <div class="flex bg-zinc-900 p-1 rounded-xl">
                 <button id="type-fixed" class="flex-1 py-3 text-[9px] font-black rounded-lg bg-zinc-800" onclick="setType('fixed')">FIXED</button>
-                <button id="type-flex" class="flex-1 py-3 text-[9px] font-black text-zinc-600" onclick="setType('flex')">FLEXIBLE</button>
+                <button id="type-flex" class="flex-1 py-3 text-[9px] font-black text-zinc-500" onclick="setType('flex')">FLEXIBLE</button>
             </div>
             <div id="section-fixed" class="grid grid-cols-7 gap-1">
                 <button class="day-btn active" data-day="1" onclick="this.classList.toggle('active')">M</button>
@@ -85,167 +93,162 @@
                 <button class="day-btn active" data-day="6" onclick="this.classList.toggle('active')">S</button>
                 <button class="day-btn active" data-day="0" onclick="this.classList.toggle('active')">S</button>
             </div>
-            <div id="section-flex" class="hidden"><input type="number" id="h-freq" placeholder="Times Per Week (1-7)"></div>
-            <div class="flex items-center justify-between p-3 bg-zinc-900/40 rounded-xl">
-                <span class="text-[9px] font-black uppercase">Non-Negotiable</span>
-                <input type="checkbox" id="h-nn" class="w-5 h-5">
-            </div>
-            <div class="border-t border-zinc-800 pt-4 space-y-3">
-                <div class="flex justify-between items-center"><span class="text-[9px] font-black">NUMERIC LOGIC</span><input type="checkbox" id="use-num"></div>
+            <div id="section-flex" class="hidden"><input type="number" id="h-freq" placeholder="Times Per Week"></div>
+            <div class="flex items-center justify-between p-4 bg-zinc-900/40 rounded-xl"><span class="u-title">Non-Negotiable</span><input type="checkbox" id="h-nn" class="w-5 h-5"></div>
+            
+            <div class="pt-4 border-t border-zinc-900 space-y-4">
+                <div class="flex justify-between items-center"><span class="u-title">Numeric Input</span><input type="checkbox" id="use-num"></div>
                 <div class="grid grid-cols-3 gap-2"><input type="number" id="h-min" placeholder="MIN"><input type="number" id="h-max" placeholder="MAX"><input type="number" id="h-step" placeholder="STEP"></div>
                 <input type="text" id="h-unit" placeholder="UNIT (e.g. reps, s)">
-                <div class="flex justify-between items-center"><span class="text-[9px] font-black">TAG OPTIONS</span><input type="checkbox" id="use-opt"></div>
-                <textarea id="h-tags" placeholder="Option A, Option B..." class="h-24 p-3"></textarea>
-                <div class="flex gap-4"><label class="text-[9px] font-black flex items-center gap-2">MULTI <input type="checkbox" id="h-multi"></label></div>
+                <div class="flex justify-between items-center"><span class="u-title">Tag Picker</span><input type="checkbox" id="use-opt"></div>
+                <textarea id="h-tags" placeholder="Option 1, Option 2..."></textarea>
+                <div class="flex gap-4"><label class="u-title flex items-center gap-2">Multi-Select <input type="checkbox" id="h-multi"></label></div>
             </div>
-            <button onclick="saveHabit()" class="w-full py-4 bg-white text-black font-black uppercase rounded-xl text-[10px]">Forge Habit</button>
+            <button onclick="saveHabit()" class="w-full py-5 bg-white text-black font-black uppercase rounded-2xl text-[10px]">Forge Habit</button>
         </div>
         <div id="manifest-list" class="mt-8 space-y-2"></div>
     </div>
 
     <div id="calendar-modal" class="modal">
-        <div class="flex justify-between items-center mb-8">
-            <button onclick="closeModal('calendar-modal')" class="w-12 h-12 bg-zinc-900 rounded-full">✕</button>
-            <h3 class="font-black uppercase tracking-widest text-xs">Calendar</h3>
-            <div class="w-12"></div>
-        </div>
+        <div class="flex justify-between items-center mb-8"><button onclick="closeM('calendar-modal')" class="w-12 h-12 bg-zinc-900 rounded-full">✕</button><h3 class="u-title">Campaign Heatmap</h3><div class="w-12"></div></div>
         <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
     </div>
 
     <div id="picker-modal" class="modal">
-        <div class="flex justify-between items-center mb-8">
-            <button onclick="closeModal('picker-modal')" class="w-12 h-12 bg-zinc-900 rounded-full">✕</button>
-            <h3 id="modal-title" class="font-black uppercase tracking-widest text-xs">LOG DATA</h3>
-            <button onclick="closeModal('picker-modal')" class="w-12 h-12 bg-green-500 text-black rounded-full font-bold">✓</button>
-        </div>
+        <div class="flex justify-between items-center mb-8"><button onclick="closeM('picker-modal')" class="w-12 h-12 bg-zinc-900 rounded-full">✕</button><h3 id="modal-title" class="u-title">Log</h3><button onclick="closeM('picker-modal')" class="w-12 h-12 bg-green-500 text-black rounded-full">✓</button></div>
         <div id="modal-content" class="grid grid-cols-2 gap-3 overflow-y-auto"></div>
     </div>
 
     <nav class="fixed-nav">
-        <div onclick="nav('track')" class="nav-link" id="n-track">Track</div>
-        <div onclick="nav('build')" class="nav-link" id="n-build">Build</div>
+        <div onclick="nav('track')" class="nav-link" id="n-track"><span class="u-title">Track</span></div>
+        <div onclick="nav('build')" class="nav-link" id="n-build"><span class="u-title">Build</span></div>
     </nav>
 
     <script>
-        let manifest = JSON.parse(localStorage.getItem('M26')) || [];
-        let logs = JSON.parse(localStorage.getItem('L26')) || {};
+        let manifest = JSON.parse(localStorage.getItem('F40_M')) || [];
+        let logs = JSON.parse(localStorage.getItem('F40_L')) || {};
         let activeDate = new Date().toISOString().split('T')[0];
         let activeType = 'fixed';
-        let currentHId = null;
+        let curHId = null;
 
         function nav(v) {
-            document.getElementById('view-track').classList.toggle('hidden', v !== 'track');
-            document.getElementById('view-build').classList.toggle('hidden', v !== 'build');
+            document.getElementById('view-track').classList.toggle('hidden', v!=='track');
+            document.getElementById('view-build').classList.toggle('hidden', v!=='build');
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            document.getElementById('n-' + v).classList.add('active');
-            if(v === 'track') renderTrack(); else renderManifest();
+            document.getElementById('n-'+v).classList.add('active');
+            if(v==='track') renderTrack(); else renderManifest();
         }
 
         function setType(t) {
             activeType = t;
-            document.getElementById('type-fixed').className = t==='fixed'?'flex-1 py-3 text-[9px] font-black rounded-lg bg-zinc-800':'flex-1 py-3 text-[9px] font-black text-zinc-600';
-            document.getElementById('type-flex').className = t==='flex'?'flex-1 py-3 text-[9px] font-black rounded-lg bg-zinc-800':'flex-1 py-3 text-[9px] font-black text-zinc-600';
-            document.getElementById('section-fixed').classList.toggle('hidden', t === 'flex');
-            document.getElementById('section-flex').classList.toggle('hidden', t === 'fixed');
+            document.getElementById('type-fixed').classList.toggle('bg-zinc-800', t==='fixed');
+            document.getElementById('type-flex').classList.toggle('bg-zinc-800', t==='flex');
+            document.getElementById('section-fixed').classList.toggle('hidden', t==='flex');
+            document.getElementById('section-flex').classList.toggle('hidden', t==='fixed');
+        }
+
+        function getWeekCount(id, ds) {
+            const d = new Date(ds); const day = d.getDay() || 7;
+            const mon = new Date(d); mon.setDate(d.getDate() - day + 1);
+            let c = 0;
+            for(let i=0; i<7; i++) {
+                const k = new Date(mon); k.setDate(mon.getDate()+i);
+                const ks = k.toISOString().split('T')[0];
+                if(logs[ks]?.[id] && (logs[ks][id].c || logs[ks][id].n !== null || logs[ks][id].t.length > 0)) c++;
+            }
+            return c;
+        }
+
+        function getScore(ds) {
+            const target = parseInt(document.getElementById('global-target').value);
+            const dayIdx = new Date(ds).getDay();
+            const habits = manifest.filter(h => h.type==='fixed' ? h.days.includes(dayIdx) : (getWeekCount(h.id, ds) < h.freq || logs[ds]?.[h.id]));
+            if(!habits.length) return { score: 0, pass: false, total: 0 };
+            let done = 0, nnFail = false;
+            habits.forEach(h => {
+                const l = logs[ds]?.[h.id] || { n: null, t: [], c: false };
+                const isDone = (h.useNum?l.n!==null:true) && (h.useOpt?l.t.length>0:true) && ((!h.useNum&&!h.useOpt)?l.c:true);
+                if(isDone) done++; else if(h.nn) nnFail = true;
+            });
+            const s = Math.round((done/habits.length)*100);
+            return { score: nnFail ? 0 : s, pass: !nnFail && s >= target, total: habits.length };
         }
 
         function renderTrack() {
             const feed = document.getElementById('habit-feed'); feed.innerHTML = '';
             const dayIdx = new Date(activeDate).getDay();
-            const target = parseInt(document.getElementById('global-target').value);
-
-            const habits = manifest.filter(h => {
-                if(h.type === 'fixed') return h.days.includes(dayIdx);
-                // Simple flex check: if not logged today, show it
-                return !logs[activeDate]?.[h.id];
-            });
-
-            let doneCount = 0, nnFail = false;
+            const habits = manifest.filter(h => h.type==='fixed' ? h.days.includes(dayIdx) : (getWeekCount(h.id, activeDate) < h.freq || logs[activeDate]?.[h.id]));
 
             habits.forEach(h => {
-                const log = logs[activeDate]?.[h.id] || { n: null, t: [], c: false };
-                const isDone = (h.useNum ? log.n !== null : true) && (h.useOpt ? log.t.length > 0 : true) && ((!h.useNum && !h.useOpt) ? log.c : true);
-                if(isDone) doneCount++; else if(h.nn) nnFail = true;
-
+                const l = logs[activeDate]?.[h.id] || { n:null, t:[], c:false };
+                const isDone = (h.useNum?l.n!==null:true) && (h.useOpt?l.t.length>0:true) && ((!h.useNum&&!h.useOpt)?l.c:true);
                 let pillUI = '';
-                if(log.n !== null) pillUI += `<div class="pill">${log.n} ${h.unit}</div>`;
-                log.t.forEach(tag => pillUI += `<div class="pill">${tag}</div>`);
+                if(l.n !== null) pillUI += `<div class="pill">${l.n} ${h.unit}</div>`;
+                l.t.forEach(t => pillUI += `<div class="pill">${t}</div>`);
 
-                feed.innerHTML += `
-                <div class="habit-card ${h.nn && !isDone ? 'nn-fail' : ''}">
-                    <div class="flex-1">
-                        <p class="font-black text-xs uppercase ${isDone?'text-white':'text-zinc-700'}">${h.name}</p>
-                    </div>
+                feed.innerHTML += `<div class="habit-card ${h.nn && !isDone ? 'nn-fail':''}">
+                    <div class="flex-1"><p class="font-black text-xs uppercase ${isDone?'text-white':'text-zinc-700'}">${h.name}</p></div>
                     <div class="flex items-center gap-3">
-                        <div class="flex flex-wrap justify-end" onclick="openPicker('${h.id}')">${pillUI || (h.useNum||h.useOpt?'<span class="text-[8px] text-zinc-600 font-bold">ADD+</span>':'')}</div>
+                        <div class="flex flex-wrap justify-end" onclick="openP('${h.id}')">${pillUI || (h.useNum||h.useOpt?'<span class="text-[8px] text-zinc-600 font-bold">LOG+</span>':'')}</div>
                         <div class="check-box ${isDone?'active':''}" onclick="toggleH('${h.id}')">${isDone?'✓':''}</div>
                     </div>
                 </div>`;
             });
 
-            const rawScore = habits.length ? Math.round((doneCount / habits.length) * 100) : 0;
-            const finalScore = nnFail ? 0 : rawScore;
-            document.getElementById('score-val').innerText = finalScore + '%';
+            const res = getScore(activeDate);
+            document.getElementById('val-score').innerText = res.score + '%';
+            document.getElementById('ring-score').style.borderColor = res.pass ? 'var(--neon)' : (res.score > 0 ? 'var(--nn)' : '#222');
             document.getElementById('display-date').innerText = new Date(activeDate).toLocaleDateString('en-GB', {day:'2-digit', month:'short'});
             document.getElementById('display-day').innerText = new Date(activeDate).toLocaleDateString('en-GB', {weekday:'long'});
-        }
-
-        function openPicker(id) {
-            currentHId = id; const h = manifest.find(x=>x.id===id);
-            const log = logs[activeDate]?.[id] || { n:null, t:[] };
-            document.getElementById('modal-title').innerText = h.name.toUpperCase();
-            const cont = document.getElementById('modal-content'); cont.innerHTML = '';
             
-            if(h.useNum) {
-                for(let i=h.min; i<=h.max; i+=h.step) {
-                    cont.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl border ${log.n===i?'border-green-500 text-green-500':'border-zinc-800'} text-center font-bold" onclick="setNum(${i})">${i} ${h.unit}</div>`;
-                }
-            }
-            if(h.useOpt) {
-                h.tags.forEach(t => {
-                    cont.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl border ${log.t.includes(t)?'border-green-500 text-green-500':'border-zinc-800'} text-center font-bold" onclick="setTag('${t}')">${t}</div>`;
-                });
-            }
-            document.getElementById('picker-modal').style.display = 'flex';
-        }
-
-        function setNum(v) { ensureLog(); logs[activeDate][currentHId].n = v; save(); openPicker(currentHId); }
-        function setTag(t) { 
-            ensureLog(); const h = manifest.find(x=>x.id===currentHId);
-            let l = logs[activeDate][currentHId];
-            l.t = h.multi ? (l.t.includes(t)?l.t.filter(x=>x!==t):[...l.t,t]) : [t];
-            save(); openPicker(currentHId);
-        }
-
-        function saveHabit() {
-            const h = {
-                id: 'h'+Date.now(), name: document.getElementById('h-name').value, type: activeType,
-                days: Array.from(document.querySelectorAll('.day-btn.active')).map(b => parseInt(b.dataset.day)),
-                freq: parseInt(document.getElementById('h-freq').value || 0), nn: document.getElementById('h-nn').checked,
-                useNum: document.getElementById('use-num').checked, useOpt: document.getElementById('use-opt').checked,
-                min: parseFloat(document.getElementById('h-min').value || 0), max: parseFloat(document.getElementById('h-max').value || 0),
-                step: parseFloat(document.getElementById('h-step').value || 1), unit: document.getElementById('h-unit').value || '',
-                tags: document.getElementById('h-tags').value.split(',').map(t => t.trim()).filter(t => t), multi: document.getElementById('h-multi').checked
-            };
-            if(h.name) { manifest.push(h); localStorage.setItem('M26', JSON.stringify(manifest)); nav('track'); }
+            // Stats
+            let conquered = 0; Object.keys(logs).forEach(k => { if(getScore(k).pass) conquered++; });
+            document.getElementById('val-conquer').innerText = conquered;
+            const dates = Object.keys(logs).sort();
+            document.getElementById('val-gone').innerText = dates.length ? Math.ceil(Math.abs(new Date() - new Date(dates[0]))/86400000) : 0;
         }
 
         function openCalendar() {
             const grid = document.getElementById('calendar-grid'); grid.innerHTML = '';
-            const target = parseInt(document.getElementById('global-target').value);
-            for(let i=1; i<=30; i++) {
-                grid.innerHTML += `<div class="cal-day bg-zinc-900 border-zinc-800" onclick="closeModal('calendar-modal')">${i}</div>`;
+            const now = new Date();
+            const first = new Date(now.getFullYear(), now.getMonth(), 1);
+            const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            const offset = (first.getDay() + 6) % 7;
+            for(let i=0; i<offset; i++) grid.innerHTML += '<div></div>';
+            for(let d=1; d<=last.getDate(); d++) {
+                const ds = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const res = getScore(ds);
+                let bg = 'transparent', bdr = '#222';
+                if(res.total > 0) { bg = res.pass ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)'; bdr = res.pass ? 'var(--neon)' : 'var(--nn)'; }
+                grid.innerHTML += `<div class="cal-day" style="background:${bg}; border-color:${bdr}" onclick="selDate('${ds}')">${d}<span style="font-size:6px">${res.total?res.score+'%':''}</span></div>`;
             }
             document.getElementById('calendar-modal').style.display = 'flex';
         }
 
-        function toggleH(id) { currentHId = id; ensureLog(); logs[activeDate][id].c = !logs[activeDate][id].c; save(); }
-        function ensureLog() { if(!logs[activeDate]) logs[activeDate] = {}; if(!logs[activeDate][currentHId]) logs[activeDate][currentHId] = { n:null, t:[], c:false }; }
-        function save() { localStorage.setItem('L26', JSON.stringify(logs)); renderTrack(); }
-        function closeModal(m) { document.getElementById(m).style.display = 'none'; }
-        function renderManifest() { document.getElementById('manifest-list').innerHTML = manifest.map(h => `<div class="bg-zinc-900 p-4 rounded-xl flex justify-between items-center text-[10px] font-bold"><span>${h.name.toUpperCase()}</span><button onclick="delH('${h.id}')">✕</button></div>`).join(''); }
-        function delH(id) { manifest = manifest.filter(x=>x.id!==id); localStorage.setItem('M26', JSON.stringify(manifest)); renderManifest(); }
+        function openP(id) {
+            curHId = id; const h = manifest.find(x=>x.id===id);
+            const l = logs[activeDate]?.[id] || { n:null, t:[] };
+            document.getElementById('modal-title').innerText = h.name.toUpperCase();
+            const c = document.getElementById('modal-content'); c.innerHTML = '';
+            if(h.useNum) { for(let i=h.min; i<=h.max; i+=h.step) c.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl border ${l.n===i?'border-green-500 text-green-500':'border-zinc-800'} text-center font-bold" onclick="setN(${i})">${i} ${h.unit}</div>`; }
+            if(h.useOpt) { h.tags.forEach(t => c.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl border ${l.t.includes(t)?'border-green-500 text-green-500':'border-zinc-800'} text-center font-bold" onclick="setT('${t}')">${t}</div>`); }
+            document.getElementById('picker-modal').style.display = 'flex';
+        }
 
+        function setN(v) { ensureL(); logs[activeDate][curHId].n = v; save(); openP(curHId); }
+        function setT(t) { ensureL(); const h = manifest.find(x=>x.id===curHId); let l = logs[activeDate][curHId]; l.t = h.multi ? (l.t.includes(t)?l.t.filter(x=>x!==t):[...l.t,t]) : [t]; save(); openP(curHId); }
+        function saveHabit() {
+            const h = { id: 'h'+Date.now(), name: document.getElementById('h-name').value, type: activeType, days: Array.from(document.querySelectorAll('.day-btn.active')).map(b => parseInt(b.dataset.day)), freq: parseInt(document.getElementById('h-freq').value || 0), nn: document.getElementById('h-nn').checked, useNum: document.getElementById('use-num').checked, useOpt: document.getElementById('use-opt').checked, min: parseFloat(document.getElementById('h-min').value || 0), max: parseFloat(document.getElementById('h-max').value || 0), step: parseFloat(document.getElementById('h-step').value || 1), unit: document.getElementById('h-unit').value || '', tags: document.getElementById('h-tags').value.split(',').map(t => t.trim()).filter(t => t), multi: document.getElementById('h-multi').checked };
+            if(h.name) { manifest.push(h); localStorage.setItem('F40_M', JSON.stringify(manifest)); document.getElementById('h-name').value = ''; nav('track'); }
+        }
+        function toggleH(id) { curHId = id; ensureL(); logs[activeDate][id].c = !logs[activeDate][id].c; save(); }
+        function selDate(ds) { activeDate = ds; closeM('calendar-modal'); renderTrack(); }
+        function ensureL() { if(!logs[activeDate]) logs[activeDate] = {}; if(!logs[activeDate][curHId]) logs[activeDate][curHId] = { n:null, t:[], c:false }; }
+        function save() { localStorage.setItem('F40_L', JSON.stringify(logs)); renderTrack(); }
+        function closeM(m) { document.getElementById(m).style.display = 'none'; }
+        function renderManifest() { document.getElementById('manifest-list').innerHTML = manifest.map(h => `<div class="bg-zinc-900 p-4 rounded-xl flex justify-between items-center text-[10px] font-bold"><span>${h.name.toUpperCase()}</span><button onclick="delH('${h.id}')">✕</button></div>`).join(''); }
+        function delH(id) { manifest = manifest.filter(x=>x.id!==id); localStorage.setItem('F40_M', JSON.stringify(manifest)); renderManifest(); }
+        function conquerDay() { alert("Day Logged."); renderTrack(); }
         nav('track');
     </script>
 </body>
