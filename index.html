@@ -22,7 +22,7 @@
         .action-zone { display: flex; align-items: center; gap: 8px; }
         .pill-scroll { display: flex; overflow-x: auto; gap: 4px; scrollbar-width: none; max-width: 140px; align-items: center; }
         .pill { background: rgba(34,197,94,0.1); border: 1px solid var(--neon); color: var(--neon); padding: 4px 8px; border-radius: 6px; font-size: 9px; font-weight: 800; white-space: nowrap; }
-        .note-pill { background: rgba(249,115,22,0.1); border: 1px solid var(--reset); color: var(--reset); padding: 4px 6px; border-radius: 6px; font-size: 10px; }
+        .note-preview-pill { background: rgba(249,115,22,0.1); border: 1px solid var(--reset); color: var(--reset); padding: 4px 8px; border-radius: 6px; font-size: 9px; font-weight: 700; white-space: nowrap; max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
         
         .set-btn { font-size: 10px; font-weight: 900; color: var(--neon); padding: 8px 14px; border: 1px dashed var(--neon); border-radius: 8px; }
         .check-box { width: 44px; height: 44px; border: 2px solid #333; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -37,8 +37,6 @@
         .fixed-nav { position: fixed; bottom: 0; width: 100%; background: #000; border-top: 1px solid var(--border); display: flex; height: 80px; z-index: 200; padding-bottom: env(safe-area-inset-bottom); }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; font-size: 9px; font-weight: 900; text-transform: uppercase; }
         .nav-item.active { color: var(--neon); }
-        .opt-btn { p: 16px; background: #0f0f0f; border-radius: 12px; border: 1px solid #222; text-align: center; font-weight: 700; }
-        .opt-btn.sel { border-color: var(--neon); color: var(--neon); }
     </style>
 </head>
 <body>
@@ -124,8 +122,8 @@
     </nav>
 
     <script>
-        let manifest = JSON.parse(localStorage.getItem('M_BREAD_V4')) || [];
-        let logs = JSON.parse(localStorage.getItem('L_BREAD_V4')) || {};
+        let manifest = JSON.parse(localStorage.getItem('M_BREAD_V5')) || [];
+        let logs = JSON.parse(localStorage.getItem('L_BREAD_V5')) || {};
         let activeDate = new Date().toISOString().split('T')[0];
         let buildMode = 'fixed', editId = null, curHId = null, hasFocusedNotes = false;
 
@@ -167,7 +165,7 @@
             };
             if(!h.name) return;
             editId ? manifest[manifest.findIndex(x => x.id === editId)] = h : manifest.push(h);
-            localStorage.setItem('M_BREAD_V4', JSON.stringify(manifest));
+            localStorage.setItem('M_BREAD_V5', JSON.stringify(manifest));
             resetBuilder(); nav('track');
         }
 
@@ -196,7 +194,10 @@
                 let pills = '';
                 if(l.n !== null) pills += `<div class="pill">${l.n}${h.unit}</div>`;
                 if(l.t) l.t.forEach(t => pills += `<div class="pill">${t}</div>`);
-                if(l.notes) pills += `<div class="note-pill">📝</div>`;
+                if(l.notes) {
+                    const trunc = l.notes.length > 15 ? l.notes.substring(0, 12) + '...' : l.notes;
+                    pills += `<div class="note-preview-pill">📝 ${trunc}</div>`;
+                }
 
                 feed.innerHTML += `
                     <div class="habit-card ${isNN ? 'nn-active' : ''}">
@@ -292,7 +293,7 @@
         }
 
         function ensureL(id) { if(!logs[activeDate]) logs[activeDate] = {}; if(!logs[activeDate][id]) logs[activeDate][id] = { done: false, n: null, t: [], notes: '' }; }
-        function save(silent=false) { localStorage.setItem('L_BREAD_V4', JSON.stringify(logs)); if(!silent) renderTrack(); }
+        function save(silent=false) { localStorage.setItem('L_BREAD_V5', JSON.stringify(logs)); if(!silent) renderTrack(); }
         function closeM(m) { document.getElementById(m).style.display = 'none'; renderTrack(); }
         function toggleCheck(id) { ensureL(id); logs[activeDate][id].done = !logs[activeDate][id].done; save(); }
 
@@ -365,7 +366,7 @@
         }
 
         function resetBuilder() { editId = null; document.getElementById('form-wrap').querySelectorAll('input, textarea').forEach(el => el.type==='checkbox'?el.checked=false:el.value=''); document.getElementById('forge-btn').innerText="Forge Habit"; document.getElementById('cancel-btn').classList.add('hidden'); }
-        function delH(id) { if(confirm('Delete?')) { manifest = manifest.filter(x => x.id !== id); localStorage.setItem('M_BREAD_V4', JSON.stringify(manifest)); renderManifest(); } }
+        function delH(id) { if(confirm('Delete?')) { manifest = manifest.filter(x => x.id !== id); localStorage.setItem('M_BREAD_V5', JSON.stringify(manifest)); renderManifest(); } }
         
         nav('track');
     </script>
