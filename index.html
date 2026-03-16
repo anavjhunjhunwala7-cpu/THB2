@@ -45,15 +45,22 @@
         
         .btn-main { width: 100%; padding: 18px; border-radius: 16px; font-weight: 900; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; transition: all 0.2s; }
         .btn-neon { background: var(--neon); color: #000; }
+        
+        .nav-arrow { font-size: 24px; font-weight: 900; color: #333; padding: 10px; }
+        .nav-arrow.active { color: var(--neon); }
     </style>
 </head>
 <body>
 
     <div id="view-track">
         <header class="fixed-header">
-            <div class="cursor-pointer flex flex-col items-center mb-4" onclick="openCalendar()">
-                <p id="head-day" class="u-title text-green-500 mb-0">---</p>
-                <h2 id="head-date" class="text-4xl font-black italic uppercase tracking-tighter">---</h2>
+            <div class="flex items-center gap-6 mb-4">
+                <button onclick="changeDay(-1)" class="nav-arrow active">◂</button>
+                <div class="cursor-pointer flex flex-col items-center" onclick="openCalendar()">
+                    <p id="head-day" class="u-title text-green-500 mb-0">---</p>
+                    <h2 id="head-date" class="text-4xl font-black italic uppercase tracking-tighter">---</h2>
+                </div>
+                <button id="next-day-btn" onclick="changeDay(1)" class="nav-arrow">▸</button>
             </div>
             <div class="flex gap-4">
                 <div class="stat-circle"><span class="stat-val" id="val-score">0%</span><span class="stat-lab">Score</span></div>
@@ -141,16 +148,26 @@
     </nav>
 
     <script>
-        let manifest = JSON.parse(localStorage.getItem('M_BREAD_V8')) || [];
-        let logs = JSON.parse(localStorage.getItem('L_BREAD_V8')) || {};
-        let config = JSON.parse(localStorage.getItem('C_BREAD_V8')) || { goal: 75, pass: 100 };
+        let manifest = JSON.parse(localStorage.getItem('M_BREAD_V9')) || [];
+        let logs = JSON.parse(localStorage.getItem('L_BREAD_V9')) || {};
+        let config = JSON.parse(localStorage.getItem('C_BREAD_V9')) || { goal: 75, pass: 100 };
         let activeDate = new Date().toISOString().split('T')[0];
+        let todayStr = new Date().toISOString().split('T')[0];
         let buildMode = 'fixed', editId = null, curHId = null;
+
+        function changeDay(offset) {
+            let d = new Date(activeDate);
+            d.setDate(d.getDate() + offset);
+            let target = d.toISOString().split('T')[0];
+            if (target > todayStr) return;
+            activeDate = target;
+            renderTrack();
+        }
 
         function saveConfig() { 
             config.goal = parseInt(document.getElementById('c-goal').value) || 75;
             config.pass = parseInt(document.getElementById('c-pass').value) || 100;
-            localStorage.setItem('C_BREAD_V8', JSON.stringify(config));
+            localStorage.setItem('C_BREAD_V9', JSON.stringify(config));
             renderTrack();
         }
 
@@ -178,7 +195,7 @@
             const h = { id: editId || 'h' + Date.now(), name: document.getElementById('h-name').value, type: buildMode, days: Array.from(document.querySelectorAll('.day-btn.active')).map(b => parseInt(b.dataset.d)), freq: parseInt(document.getElementById('h-freq').value || 0), nn: document.getElementById('h-nn').checked, useNum: document.getElementById('h-useNum').checked, min: parseFloat(document.getElementById('h-min').value || 0), max: parseFloat(document.getElementById('h-max').value || 0), step: parseFloat(document.getElementById('h-step').value || 1), unit: document.getElementById('h-unit').value, useOpt: document.getElementById('h-useOpt').checked, tags: document.getElementById('h-tags').value.split(',').map(t => t.trim()).filter(t => t), multi: document.getElementById('h-multi').checked, notes: document.getElementById('h-notes').checked };
             if(!h.name) return;
             editId ? manifest[manifest.findIndex(x => x.id === editId)] = h : manifest.push(h);
-            localStorage.setItem('M_BREAD_V8', JSON.stringify(manifest));
+            localStorage.setItem('M_BREAD_V9', JSON.stringify(manifest));
             resetBuilder(); nav('track');
         }
 
@@ -239,6 +256,7 @@
             const d = new Date(activeDate);
             document.getElementById('head-date').innerText = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
             document.getElementById('head-day').innerText = d.toLocaleDateString('en-GB', { weekday: 'long' });
+            document.getElementById('next-day-btn').classList.toggle('active', activeDate < todayStr);
             
             const s = getDailyStatus(activeDate);
             document.getElementById('val-score').innerText = s.score + '%';
@@ -252,12 +270,10 @@
         }
 
         function updateAndLock() {
-            localStorage.setItem('L_BREAD_V8', JSON.stringify(logs));
+            localStorage.setItem('L_BREAD_V9', JSON.stringify(logs));
             renderTrack();
-            alert("Day Updated & Locked.");
         }
 
-        // REMAINING LOGIC (PICKER, CALENDAR) UPDATED TO USE V8 KEYS
         function openPicker(id) { curHId = id; const h = manifest.find(x => x.id === id); ensureL(id); const l = logs[activeDate][id]; document.getElementById('pick-title').innerText = h.name; renderPickerOptions(); const nBox = document.getElementById('notes-container'); const nInput = document.getElementById('pick-notes'); if(h.notes) { nBox.classList.remove('hidden'); nInput.value = l.notes || ''; nInput.oninput = (e) => { logs[activeDate][curHId].notes = e.target.value; }; } else { nBox.classList.add('hidden'); } document.getElementById('mod-pick').style.display = 'flex'; }
         function renderPickerOptions() { const h = manifest.find(x => x.id === curHId); const l = logs[activeDate][curHId]; const cont = document.getElementById('pick-options'); cont.innerHTML = ''; if(h.useNum) { for(let i=h.min; i<=h.max; i+=h.step) { cont.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl border ${l.n == i ? 'border-green-500 text-green-500' : 'border-zinc-800'} text-center font-bold" onclick="setN(${i})">${i}</div>`; } } if(h.useOpt) { h.tags.forEach(t => { cont.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl border ${l.t.includes(t) ? 'border-green-500 text-green-500' : 'border-zinc-800'} text-center font-bold" onclick="setT('${t}')">${t}</div>`; }); } }
         function setN(v) { logs[activeDate][curHId].n = v; logs[activeDate][curHId].done = true; renderPickerOptions(); }
@@ -289,7 +305,7 @@
         function renderManifest() { document.getElementById('manifest-list').innerHTML = manifest.map(h => `<div class="p-4 bg-zinc-900 rounded-xl flex justify-between border border-zinc-800"><span class="font-black uppercase text-[10px]">${h.name}</span><div class="flex gap-4"><button onclick="loadEdit('${h.id}')" class="text-zinc-500 font-black text-[9px]">EDIT</button><button onclick="delH('${h.id}')" class="text-red-500 font-black text-[10px]">✕</button></div></div>`).join(''); }
         function loadEdit(id) { editId = id; const h = manifest.find(x => x.id === id); document.getElementById('h-name').value = h.name; setMode(h.type); document.querySelectorAll('.day-btn').forEach(b => b.classList.toggle('active', h.days.includes(parseInt(b.dataset.d)))); document.getElementById('h-freq').value = h.freq; document.getElementById('h-nn').checked = h.nn; document.getElementById('h-useNum').checked = h.useNum; document.getElementById('h-min').value = h.min; document.getElementById('h-max').value = h.max; document.getElementById('h-step').value = h.step || 1; document.getElementById('h-unit').value = h.unit; document.getElementById('h-useOpt').checked = h.useOpt; document.getElementById('h-tags').value = h.tags.join(', '); document.getElementById('h-multi').checked = h.multi; document.getElementById('h-notes').checked = h.notes; document.getElementById('forge-btn').innerText = "UPDATE HABIT"; document.getElementById('cancel-btn').classList.remove('hidden'); nav('build'); }
         function resetBuilder() { editId = null; document.getElementById('form-wrap').querySelectorAll('input, textarea').forEach(el => el.type==='checkbox'?el.checked=false:el.value=''); document.getElementById('forge-btn').innerText="Forge Habit"; document.getElementById('cancel-btn').classList.add('hidden'); }
-        function delH(id) { if(confirm('Delete?')) { manifest = manifest.filter(x => x.id !== id); localStorage.setItem('M_BREAD_V8', JSON.stringify(manifest)); renderManifest(); } }
+        function delH(id) { if(confirm('Delete?')) { manifest = manifest.filter(x => x.id !== id); localStorage.setItem('M_BREAD_V9', JSON.stringify(manifest)); renderManifest(); } }
         
         nav('track');
     </script>
