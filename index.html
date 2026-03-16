@@ -9,11 +9,13 @@
         :root { --neon: #22c55e; --bg: #000000; --panel: #111111; --border: #222222; --nn: #ef4444; --reset: #f97316; --quote: #f97316; }
         body { background: var(--bg); color: #fff; font-family: -apple-system, system-ui, sans-serif; margin: 0; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
         
-        .fixed-header { position: fixed; top: 0; width: 100%; height: 260px; background: var(--bg); border-bottom: 1px solid var(--border); z-index: 100; padding: 15px 20px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
-        .content-area { margin-top: 270px; margin-bottom: 120px; padding: 15px; }
-        .stat-circle { width: 75px; height: 75px; border-radius: 50%; border: 2px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0a0a0a; }
-        .stat-val { font-size: 14px; font-weight: 900; }
-        .stat-lab { font-size: 8px; font-weight: 900; color: #444; text-transform: uppercase; margin-top: 2px; }
+        /* TIGHTENED HEADER */
+        .fixed-header { position: fixed; top: 0; width: 100%; height: 210px; background: var(--bg); border-bottom: 1px solid var(--border); z-index: 100; padding: 10px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+        .content-area { margin-top: 220px; margin-bottom: 120px; padding: 15px; }
+        
+        .stat-circle { width: 70px; height: 70px; border-radius: 50%; border: 2px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0a0a0a; }
+        .stat-val { font-size: 13px; font-weight: 900; }
+        .stat-lab { font-size: 7px; font-weight: 900; color: #444; text-transform: uppercase; margin-top: 1px; }
 
         .habit-card { background: var(--panel); border: 1px solid var(--border); border-radius: 1.25rem; margin-bottom: 10px; display: flex; align-items: center; padding: 16px; position: relative; min-height: 85px; justify-content: space-between; }
         .nn-active { border-left: 4px solid var(--nn); }
@@ -46,9 +48,9 @@
         .btn-main { width: 100%; padding: 18px; border-radius: 16px; font-weight: 900; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; transition: all 0.2s; }
         .btn-neon { background: var(--neon); color: #000; }
         
-        .nav-arrow { font-size: 24px; font-weight: 900; color: #333; padding: 10px; }
+        .nav-arrow { font-size: 20px; font-weight: 900; color: #333; padding: 5px; }
         .nav-arrow.active { color: var(--neon); }
-        .quote-banner { font-size: 11px; font-weight: 900; letter-spacing: 0.15em; color: var(--quote); text-transform: uppercase; text-align: center; }
+        .quote-banner { font-size: 10px; font-weight: 900; letter-spacing: 0.15em; color: var(--quote); text-transform: uppercase; text-align: center; margin-bottom: 2px; }
     </style>
 </head>
 <body>
@@ -56,15 +58,15 @@
     <div id="view-track">
         <header class="fixed-header">
             <div id="daily-quote" class="quote-banner">---</div>
-            <div class="flex items-center gap-6">
+            <div class="flex items-center gap-4">
                 <button onclick="changeDay(-1)" class="nav-arrow active">◂</button>
                 <div class="cursor-pointer flex flex-col items-center" onclick="openCalendar()">
                     <p id="head-day" class="u-title text-green-500 mb-0">---</p>
-                    <h2 id="head-date" class="text-4xl font-black italic uppercase tracking-tighter">---</h2>
+                    <h2 id="head-date" class="text-3xl font-black italic uppercase tracking-tighter">---</h2>
                 </div>
                 <button id="next-day-btn" onclick="changeDay(1)" class="nav-arrow">▸</button>
             </div>
-            <div class="flex gap-4">
+            <div class="flex gap-3">
                 <div class="stat-circle"><span class="stat-val" id="val-score">0%</span><span class="stat-lab">Score</span></div>
                 <div class="stat-circle" style="border-color: var(--neon)"><span class="stat-val text-green-500" id="val-conquer">0/75</span><span class="stat-lab">Conquer</span></div>
                 <div class="stat-circle"><span class="stat-val" id="val-gone">0</span><span class="stat-lab">Days By</span></div>
