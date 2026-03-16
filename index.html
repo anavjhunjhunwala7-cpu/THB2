@@ -6,16 +6,13 @@
     <title>THE HABIT BUILDER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --neon: #22c55e; --bg: #000000; --panel: #111111; --border: #222222; --nn: #ef4444; --reset: #f97316; --quote: #f97316; }
+        :root { --neon: #22c55e; --bg: #000000; --panel: #111111; --border: #222222; --nn: #ef4444; --reset: #f97316; --yellow: #facc15; --quote: #f97316; }
         body { background: var(--bg); color: #fff; font-family: -apple-system, system-ui, sans-serif; margin: 0; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
         .hidden { display: none !important; }
         .fixed-header { position: fixed; top: 0; width: 100%; height: 210px; background: var(--bg); border-bottom: 1px solid var(--border); z-index: 100; padding: 10px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
         .content-area { margin-top: 220px; margin-bottom: 120px; padding: 15px; }
         
-        /* Colored Stat Outlines */
         .stat-circle { width: 70px; height: 70px; border-radius: 50%; border: 2px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0a0a0a; transition: all 0.3s ease; position: relative; }
-        #score-circle { border-color: var(--neon); }
-        #conquer-circle { border-color: var(--reset); }
         #days-circle { border-color: #555; }
 
         .stat-val { font-size: 13px; font-weight: 900; transition: color 0.3s ease; }
@@ -35,8 +32,6 @@
         .action-zone { display: flex; align-items: center; gap: 8px; }
         .pill-scroll { display: flex; overflow-x: auto; gap: 4px; scrollbar-width: none; max-width: 140px; align-items: center; }
         .pill { background: rgba(34,197,94,0.1); border: 1px solid var(--neon); color: var(--neon); padding: 4px 8px; border-radius: 6px; font-size: 9px; font-weight: 800; white-space: nowrap; }
-        
-        /* Note Preview Styling */
         .note-preview-pill { background: rgba(249,115,22,0.1); border: 1px solid var(--reset); color: var(--reset); padding: 4px 8px; border-radius: 6px; font-size: 9px; font-weight: 700; white-space: nowrap; max-width: 100px; overflow: hidden; text-overflow: ellipsis; font-style: italic; }
         
         .set-btn { font-size: 10px; font-weight: 900; color: var(--neon); padding: 8px 14px; border: 1px dashed var(--neon); border-radius: 8px; }
@@ -63,7 +58,6 @@
         .quote-banner { font-size: 10px; font-weight: 900; letter-spacing: 0.15em; color: var(--quote); text-transform: uppercase; text-align: center; margin-bottom: 2px; }
         .drag-handle { cursor: grab; padding-right: 12px; color: #333; font-size: 18px; }
         
-        /* Insights period styling */
         .period-pill-row { display: flex; overflow-x: auto; gap: 6px; padding-bottom: 12px; scrollbar-width: none; }
         .p-pill { background: #111; border: 1px solid #222; color: #555; padding: 8px 14px; border-radius: 10px; font-size: 10px; font-weight: 900; white-space: nowrap; }
         .p-pill.active { background: var(--neon); color: #000; border-color: var(--neon); }
@@ -210,7 +204,6 @@
 
         function setQuote() { const qs = ["DISCIPLINE OR REGRET", "WIN THE DAY", "KILL THE EXCUSE", "OWN YOUR LIFE", "DO THE WORK", "STAY HARD"]; document.getElementById('daily-quote').innerText = qs[Math.floor(Math.random() * qs.length)]; }
 
-        // --- INTELLIGENCE ENGINE ---
         function setInsightRange(val) {
             const pills = document.querySelectorAll('.p-pill');
             pills.forEach(p => p.classList.remove('active'));
@@ -240,7 +233,6 @@
                 else { const wks = insightDays === 0 ? Math.max(1, Math.ceil(Object.keys(logs).length / 7)) : Math.ceil(insightDays / 7); rate = Math.min(100, Math.round((hits / (h.freq * wks)) * 100)); targetStr = `${h.freq}/7`; }
                 let avgDisp = 0; if(countNum) { const rawAvg = sumNum / countNum; const isDecimalStep = (h.step % 1 !== 0); avgDisp = isDecimalStep ? rawAvg.toFixed(1) : Math.round(rawAvg); }
                 let cardHTML = `<div class="p-5 bg-zinc-900 border border-zinc-800 rounded-3xl"><div class="flex justify-between items-center mb-4"><span class="u-title text-white font-black">${h.name} <span class="text-zinc-600 ml-1">(${targetStr})</span></span><span class="text-green-500 font-black text-xs">${rate}%</span></div><div class="grid grid-cols-2 gap-2">`;
-                // Logic Change: Space between Average and Unit
                 if (h.useNum) cardHTML += `<div class="bg-black p-4 rounded-2xl text-center col-span-2"><p class="u-title text-[7px] mb-1">Average</p><p class="text-xl font-black">${avgDisp} ${h.unit}</p></div>`;
                 else cardHTML += `<div class="bg-black p-4 rounded-2xl text-center col-span-2"><p class="u-title text-[7px] mb-1">Total Hits</p><p class="text-xl font-black">${hits}</p></div>`;
                 cardHTML += `</div>`;
@@ -249,17 +241,12 @@
             });
         }
 
-        // --- CORE TRACK LOGIC ---
         function renderTrack() {
             const feed = document.getElementById('habit-feed'); feed.innerHTML = '';
             const habits = manifest.filter(h => h.type==='fixed' ? h.days.includes(new Date(activeDate).getDay()) : true);
             habits.forEach(h => {
                 const l = logs[activeDate]?.[h.id] || { done: false, n: null, t: [], notes: '' };
-                let ps = ''; 
-                if(l.n !== null) ps += `<div class="pill">${l.n} ${h.unit}</div>`; 
-                if(l.t) l.t.forEach(t => ps += `<div class="pill">${t}</div>`); 
-                // Logic Change: Note Preview instead of Emoji
-                if(l.notes) ps += `<div class="note-preview-pill">${l.notes}</div>`;
+                let ps = ''; if(l.n !== null) ps += `<div class="pill">${l.n} ${h.unit}</div>`; if(l.t) l.t.forEach(t => ps += `<div class="pill">${t}</div>`); if(l.notes) ps += `<div class="note-preview-pill">${l.notes}</div>`;
                 feed.innerHTML += `<div class="habit-card ${h.nn ? 'nn-active' : ''}">${h.nn ? '<div class="nn-badge">NN</div>' : ''}<div class="flex-1 mr-4 overflow-hidden" onclick="openPicker('${h.id}')"><p class="font-bold text-sm uppercase truncate">${h.name}</p></div><div class="action-zone">${ps ? `<div class="pill-scroll" onclick="openPicker('${h.id}')">${ps}</div>` : ((h.useNum || h.useOpt || h.notes) ? `<div class="set-btn" onclick="openPicker('${h.id}')">SET</div>` : '')}<div class="check-box ${l.done ? 'active' : ''}" onclick="toggleCheck('${h.id}')">${l.done?'✓':''}</div></div></div>`;
             });
             syncHeader();
@@ -269,21 +256,54 @@
             localStorage.setItem('L_BREAD_V10', JSON.stringify(logs)); 
             const btn = document.getElementById('update-btn');
             const originalText = btn.innerText;
-            // Logic Change: Pulsing Feedback on Sync
             btn.innerText = "SYNCED ✓";
             btn.classList.add('glow-win');
-            setTimeout(() => {
-                btn.innerText = originalText;
-                btn.classList.remove('glow-win');
-            }, 1000);
+            setTimeout(() => { btn.innerText = originalText; btn.classList.remove('glow-win'); }, 1000);
             renderTrack(); 
         }
 
-        // --- REST OF CORE (UNCHANGED) ---
         function getDailyStatus(ds) { const di = new Date(ds).getDay(); const habits = manifest.filter(h => h.type==='fixed' ? h.days.includes(di) : true); if(!habits.length) return { score: 100, pass: true }; let done = 0, nnDone = true; habits.forEach(h => { const l = logs[ds]?.[h.id]; if(l?.done) done++; if(h.nn && !l?.done) nnDone = false; }); const score = Math.round((done / habits.length) * 100); return { score, pass: (nnDone && score >= config.pass) }; }
-        function triggerSelectiveGlow(oldPass) { const s = getDailyStatus(activeDate); const scoreCirc = document.getElementById('score-circle'); const conqCirc = document.getElementById('conquer-circle'); scoreCirc.classList.remove('glow-win', 'glow-warn', 'glow-fail'); void scoreCirc.offsetWidth; if(s.score >= config.pass) scoreCirc.classList.add('glow-win'); else if(s.score >= (config.pass * 0.7)) scoreCirc.classList.add('glow-warn'); else scoreCirc.classList.add('glow-fail'); if (!oldPass && s.pass) { conqCirc.classList.remove('glow-win'); void conqCirc.offsetWidth; conqCirc.classList.add('glow-win'); } }
+        
+        function triggerSelectiveGlow(oldPass) { const s = getDailyStatus(activeDate); const scoreCirc = document.getElementById('score-circle'); const conqCirc = document.getElementById('conquer-circle'); scoreCirc.classList.remove('glow-win', 'glow-warn', 'glow-fail'); void scoreCirc.offsetWidth; if(s.score >= config.pass) scoreCirc.classList.add('glow-win'); else if(s.score >= (config.pass * 0.7)) scoreCirc.classList.add('glow-warn'); else scoreCirc.classList.add('glow-fail'); }
+
+        function syncHeader() { 
+            const d = new Date(activeDate); 
+            document.getElementById('head-date').innerText = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }); 
+            document.getElementById('head-day').innerText = d.toLocaleDateString('en-GB', { weekday: 'long' }); 
+            
+            // Score Circle Traffic Logic
+            const s = getDailyStatus(activeDate); 
+            const sv = document.getElementById('val-score'); 
+            const sc = document.getElementById('score-circle');
+            sv.innerText = s.score + '%'; 
+            let scoreColor = 'var(--nn)';
+            if (s.score >= config.pass) scoreColor = 'var(--neon)';
+            else if (s.score >= config.pass * 0.7) scoreColor = 'var(--reset)';
+            sv.style.color = scoreColor;
+            sc.style.borderColor = scoreColor;
+
+            // Conquer Circle Progress Logic
+            let conq = 0; Object.keys(logs).forEach(date => { if(getDailyStatus(date).pass) conq++; }); 
+            const conqVal = document.getElementById('val-conquer');
+            const conqCirc = document.getElementById('conquer-circle');
+            conqVal.innerText = `${conq}/${config.goal}`;
+            
+            const progress = (conq / config.goal) * 100;
+            let conqColor = 'var(--nn)';
+            if (progress >= 100) conqColor = 'var(--neon)';
+            else if (progress >= 66) conqColor = 'var(--yellow)';
+            else if (progress >= 34) conqColor = 'var(--reset)';
+            
+            conqVal.style.color = conqColor;
+            conqCirc.style.borderColor = conqColor;
+
+            const ad = Object.keys(logs).sort(); 
+            document.getElementById('val-gone').innerText = ad.length ? Math.ceil(Math.abs(new Date() - new Date(ad[0]))/86400000) : 0; 
+            document.getElementById('c-goal').value = config.goal; 
+            document.getElementById('c-pass').value = config.pass; 
+        }
+
         function nav(v) { ['view-track', 'view-build', 'view-insights'].forEach(id => document.getElementById(id).classList.add('hidden')); document.getElementById('view-' + v).classList.remove('hidden'); ['n-track', 'n-build', 'n-insights'].forEach(id => document.getElementById(id).classList.remove('active')); document.getElementById('n-' + v).classList.add('active'); if(v==='build') renderManifest(); else if(v==='insights') renderInsights(); else renderTrack(); }
-        function syncHeader() { const d = new Date(activeDate); document.getElementById('head-date').innerText = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }); document.getElementById('head-day').innerText = d.toLocaleDateString('en-GB', { weekday: 'long' }); const s = getDailyStatus(activeDate); const sv = document.getElementById('val-score'); sv.innerText = s.score + '%'; sv.style.color = s.score >= config.pass ? 'var(--neon)' : (s.score >= config.pass * 0.7 ? 'var(--reset)' : 'var(--nn)'); let conq = 0; Object.keys(logs).forEach(date => { if(getDailyStatus(date).pass) conq++; }); document.getElementById('val-conquer').innerText = `${conq}/${config.goal}`; const ad = Object.keys(logs).sort(); document.getElementById('val-gone').innerText = ad.length ? Math.ceil(Math.abs(new Date() - new Date(ad[0]))/86400000) : 0; document.getElementById('c-goal').value = config.goal; document.getElementById('c-pass').value = config.pass; }
         function toggleCheck(id) { const old = getDailyStatus(activeDate).pass; if(!logs[activeDate]) logs[activeDate] = {}; if(!logs[activeDate][id]) logs[activeDate][id] = { done: false, n: null, t: [], notes: '' }; logs[activeDate][id].done = !logs[activeDate][id].done; renderTrack(); triggerSelectiveGlow(old); }
         function saveConfig() { config.goal = parseInt(document.getElementById('c-goal').value) || 75; config.pass = parseInt(document.getElementById('c-pass').value) || 100; localStorage.setItem('C_BREAD_V10', JSON.stringify(config)); renderTrack(); }
         function setMode(m) { buildMode = m; document.getElementById('mode-fixed').classList.toggle('bg-zinc-800', m==='fixed'); document.getElementById('mode-flex').classList.toggle('bg-zinc-800', m==='flex'); document.getElementById('days-row').classList.toggle('hidden', m==='flex'); document.getElementById('flex-row').classList.toggle('hidden', m==='fixed'); }
