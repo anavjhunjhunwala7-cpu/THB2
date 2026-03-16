@@ -8,61 +8,46 @@
     <style>
         :root { --neon: #22c55e; --bg: #000000; --panel: #111111; --border: #222222; --nn: #ef4444; --reset: #f97316; --quote: #f97316; }
         body { background: var(--bg); color: #fff; font-family: -apple-system, system-ui, sans-serif; margin: 0; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
-        
         .hidden { display: none !important; }
-        
         .fixed-header { position: fixed; top: 0; width: 100%; height: 210px; background: var(--bg); border-bottom: 1px solid var(--border); z-index: 100; padding: 10px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
         .content-area { margin-top: 220px; margin-bottom: 120px; padding: 15px; }
-        
         .stat-circle { width: 70px; height: 70px; border-radius: 50%; border: 2px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0a0a0a; transition: border-color 0.3s ease; }
         .stat-val { font-size: 13px; font-weight: 900; transition: color 0.3s ease; }
         .stat-lab { font-size: 7px; font-weight: 900; color: #444; text-transform: uppercase; margin-top: 1px; }
-
         .habit-card { background: var(--panel); border: 1px solid var(--border); border-radius: 1.25rem; margin-bottom: 10px; display: flex; align-items: center; padding: 16px; position: relative; min-height: 85px; justify-content: space-between; }
         .nn-active { border-left: 4px solid var(--nn); }
         .nn-badge { position: absolute; left: 0; top: 0; background: var(--nn); color: white; font-size: 7px; font-weight: 900; padding: 2px 5px; border-bottom-right-radius: 6px; }
-        
         .action-zone { display: flex; align-items: center; gap: 8px; }
         .pill-scroll { display: flex; overflow-x: auto; gap: 4px; scrollbar-width: none; max-width: 140px; align-items: center; }
         .pill { background: rgba(34,197,94,0.1); border: 1px solid var(--neon); color: var(--neon); padding: 4px 8px; border-radius: 6px; font-size: 9px; font-weight: 800; white-space: nowrap; }
         .note-preview-pill { background: rgba(249,115,22,0.1); border: 1px solid var(--reset); color: var(--reset); padding: 4px 8px; border-radius: 6px; font-size: 9px; font-weight: 700; white-space: nowrap; max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
-        
         .set-btn { font-size: 10px; font-weight: 900; color: var(--neon); padding: 8px 14px; border: 1px dashed var(--neon); border-radius: 8px; }
         .check-box { width: 44px; height: 44px; border: 2px solid #333; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .check-box.active { background: var(--neon); border-color: var(--neon); color: #000; }
-
         .input-dark { background: #0a0a0a; border: 1px solid #222; color: white; padding: 12px; border-radius: 12px; width: 100%; outline: none; }
         .day-btn { width: 100%; aspect-ratio: 1; background: #111; border: 1px solid #222; border-radius: 8px; font-size: 10px; font-weight: 900; color: #444; }
         .day-btn.active { background: var(--neon); color: #000; border-color: var(--neon); }
         .u-title { font-size: 9px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; color: #555; }
         .modal { position: fixed; inset: 0; background: #000; z-index: 1000; display: none; flex-direction: column; padding: 20px; overflow-y: auto; }
-        
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
         .cal-header-cell { text-align: center; font-size: 10px; font-weight: 900; color: var(--neon); padding-bottom: 10px; }
         .cal-day-cell { aspect-ratio: 1/1; border: 1px solid #222; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 8px; position: relative; font-weight: 800; font-size: 14px; background: #0a0a0a; }
         .cal-perc { position: absolute; bottom: 8px; font-size: 9px; font-weight: 900; opacity: 1; letter-spacing: -0.05em; }
-
         .fixed-nav { position: fixed; bottom: 0; width: 100%; background: #000; border-top: 1px solid var(--border); display: flex; height: 80px; z-index: 200; padding-bottom: env(safe-area-inset-bottom); }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; font-size: 9px; font-weight: 900; text-transform: uppercase; }
         .nav-item.active { color: var(--neon); }
-        
         .btn-main { width: 100%; padding: 18px; border-radius: 16px; font-weight: 900; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; transition: all 0.2s; }
         .btn-neon { background: var(--neon); color: #000; }
-        
         .nav-arrow { font-size: 20px; font-weight: 900; color: #333; padding: 5px; }
         .nav-arrow.active { color: var(--neon); }
         .quote-banner { font-size: 10px; font-weight: 900; letter-spacing: 0.15em; color: var(--quote); text-transform: uppercase; text-align: center; margin-bottom: 2px; }
-
         .drag-handle { cursor: grab; padding: 0 12px; color: #444; font-size: 18px; display: flex; align-items: center; }
-        .dragging { opacity: 0.4; border: 1px solid var(--neon) !important; }
-
         .insight-card { background: var(--panel); border: 1px solid var(--border); border-radius: 1rem; padding: 15px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .period-btn { padding: 6px 12px; border-radius: 8px; background: #111; border: 1px solid #222; font-size: 9px; font-weight: 900; color: #555; }
         .period-btn.active { border-color: var(--neon); color: var(--neon); }
     </style>
 </head>
 <body>
-
     <div id="view-track">
         <header class="fixed-header">
             <div id="daily-quote" class="quote-banner">---</div>
@@ -172,7 +157,6 @@
 
     <div id="mod-backup" class="modal">
         <div class="flex justify-between items-center mb-6"><button onclick="closeM('mod-backup')" class="text-2xl">✕</button><h3 class="u-title text-white text-center">Black Box</h3><div class="w-8"></div></div>
-        <p class="text-[10px] text-zinc-500 mb-4 text-center">String Recovery System</p>
         <textarea id="backup-text" class="input-dark h-64 text-[10px] mb-4 font-mono"></textarea>
         <div class="grid grid-cols-2 gap-3"><button onclick="copyBackup()" class="btn-main bg-zinc-800 text-white">Copy</button><button onclick="restoreBackup()" class="btn-main bg-red-900/30 border border-red-500 text-red-500">Restore</button></div>
     </div>
@@ -346,6 +330,8 @@
         function closeM(m) { document.getElementById(m).style.display = 'none'; renderTrack(); }
         function openCalendar() {
             const g = document.getElementById('cal-grid'); g.innerHTML = ''; const now = new Date(activeDate);
+            document.getElementById('cal-head-day').innerText = now.toLocaleDateString('en-GB', { weekday: 'long' });
+            document.getElementById('cal-head-date').innerText = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
             const startDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay(); const offset = startDay === 0 ? 6 : startDay - 1;
             const last = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
             for(let i=0; i<offset; i++) g.innerHTML += `<div></div>`;
