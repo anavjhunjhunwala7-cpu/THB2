@@ -9,14 +9,12 @@
         :root { --neon: #22c55e; --bg: #000000; --panel: #111111; --border: #222222; --nn: #ef4444; --reset: #f97316; }
         body { background: var(--bg); color: #fff; font-family: -apple-system, system-ui, sans-serif; margin: 0; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
         
-        /* 3 CIRCLE HEADER */
         .fixed-header { position: fixed; top: 0; width: 100%; height: 260px; background: var(--bg); border-bottom: 1px solid var(--border); z-index: 100; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .content-area { margin-top: 270px; margin-bottom: 100px; padding: 15px; }
         .stat-circle { width: 75px; height: 75px; border-radius: 50%; border: 2px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0a0a0a; }
         .stat-val { font-size: 16px; font-weight: 900; }
         .stat-lab { font-size: 8px; font-weight: 900; color: #444; text-transform: uppercase; margin-top: 2px; }
 
-        /* HABIT CARD */
         .habit-card { background: var(--panel); border: 1px solid var(--border); border-radius: 1.25rem; margin-bottom: 10px; display: flex; align-items: center; padding: 16px; position: relative; min-height: 85px; justify-content: space-between; }
         .nn-active { border-left: 4px solid var(--nn); }
         .nn-badge { position: absolute; left: 0; top: 0; background: var(--nn); color: white; font-size: 7px; font-weight: 900; padding: 2px 5px; border-bottom-right-radius: 6px; }
@@ -30,7 +28,6 @@
         .check-box { width: 44px; height: 44px; border: 2px solid #333; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .check-box.active { background: var(--neon); border-color: var(--neon); color: #000; }
 
-        /* BUILDER & PICKER UI */
         .input-dark { background: #0a0a0a; border: 1px solid #222; color: white; padding: 12px; border-radius: 12px; width: 100%; outline: none; }
         .day-btn { width: 100%; aspect-ratio: 1; background: #111; border: 1px solid #222; border-radius: 8px; font-size: 10px; font-weight: 900; color: #444; }
         .day-btn.active { background: var(--neon); color: #000; border-color: var(--neon); }
@@ -40,6 +37,8 @@
         .fixed-nav { position: fixed; bottom: 0; width: 100%; background: #000; border-top: 1px solid var(--border); display: flex; height: 80px; z-index: 200; padding-bottom: env(safe-area-inset-bottom); }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; font-size: 9px; font-weight: 900; text-transform: uppercase; }
         .nav-item.active { color: var(--neon); }
+        .opt-btn { p: 16px; background: #0f0f0f; border-radius: 12px; border: 1px solid #222; text-align: center; font-weight: 700; }
+        .opt-btn.sel { border-color: var(--neon); color: var(--neon); }
     </style>
 </head>
 <body>
@@ -103,9 +102,9 @@
 
     <div id="mod-pick" class="modal">
         <div class="flex justify-between items-center mb-6">
-            <button onclick="clearEntry()" class="text-orange-500 text-3xl font-black">↻</button>
+            <button onclick="clearEntry(event)" class="text-orange-500 text-3xl font-black">↻</button>
             <h3 id="pick-title" class="u-title text-white">LOG</h3>
-            <button onclick="closeM('mod-pick')" class="text-green-500 text-3xl font-black">✓</button>
+            <button onclick="closePickerFinal(event)" class="text-green-500 text-3xl font-black">✓</button>
         </div>
         <div id="pick-options" class="grid grid-cols-2 gap-3 mb-6"></div>
         <div id="notes-container" class="hidden space-y-2">
@@ -125,12 +124,11 @@
     </nav>
 
     <script>
-        let manifest = JSON.parse(localStorage.getItem('M_BREAD_FINAL')) || [];
-        let logs = JSON.parse(localStorage.getItem('L_BREAD_FINAL')) || {};
+        let manifest = JSON.parse(localStorage.getItem('M_BREAD_V4')) || [];
+        let logs = JSON.parse(localStorage.getItem('L_BREAD_V4')) || {};
         let activeDate = new Date().toISOString().split('T')[0];
-        let buildMode = 'fixed', editId = null, curHId = null;
+        let buildMode = 'fixed', editId = null, curHId = null, hasFocusedNotes = false;
 
-        // Day Toggles
         document.querySelectorAll('.day-btn').forEach(btn => btn.onclick = () => btn.classList.toggle('active'));
 
         function nav(v) {
@@ -169,7 +167,7 @@
             };
             if(!h.name) return;
             editId ? manifest[manifest.findIndex(x => x.id === editId)] = h : manifest.push(h);
-            localStorage.setItem('M_BREAD_FINAL', JSON.stringify(manifest));
+            localStorage.setItem('M_BREAD_V4', JSON.stringify(manifest));
             resetBuilder(); nav('track');
         }
 
@@ -219,10 +217,28 @@
         }
 
         function openPicker(id) {
-            curHId = id; const h = manifest.find(x => x.id === id);
+            curHId = id; hasFocusedNotes = false;
+            const h = manifest.find(x => x.id === id);
             ensureL(id); const l = logs[activeDate][id];
             document.getElementById('pick-title').innerText = h.name;
-            const cont = document.getElementById('pick-options'); cont.innerHTML = '';
+            renderPickerOptions();
+            
+            const nBox = document.getElementById('notes-container');
+            const nInput = document.getElementById('pick-notes');
+            if(h.notes) {
+                nBox.classList.remove('hidden');
+                nInput.value = l.notes || '';
+                nInput.oninput = (e) => { logs[activeDate][curHId].notes = e.target.value; save(true); };
+            } else { nBox.classList.add('hidden'); }
+            
+            document.getElementById('mod-pick').style.display = 'flex';
+        }
+
+        function renderPickerOptions() {
+            const h = manifest.find(x => x.id === curHId);
+            const l = logs[activeDate][curHId];
+            const cont = document.getElementById('pick-options'); 
+            cont.innerHTML = '';
             
             if(h.useNum) {
                 for(let i=h.min; i<=h.max; i+=h.step) {
@@ -234,22 +250,13 @@
                     cont.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl border ${l.t.includes(t) ? 'border-green-500 text-green-500' : 'border-zinc-800'} text-center font-bold" onclick="setT('${t}')">${t}</div>`;
                 });
             }
-            
-            const nBox = document.getElementById('notes-container');
-            const nInput = document.getElementById('pick-notes');
-            if(h.notes) {
-                nBox.classList.remove('hidden');
-                nInput.value = l.notes || '';
-                nInput.oninput = (e) => { logs[activeDate][curHId].notes = e.target.value; save(false); };
-            } else { nBox.classList.add('hidden'); }
-            
-            document.getElementById('mod-pick').style.display = 'flex';
         }
 
         function setN(v) { 
+            const h = manifest.find(x=>x.id===curHId);
             logs[activeDate][curHId].n = v; logs[activeDate][curHId].done = true; 
-            if(!manifest.find(x=>x.id===curHId).notes) { save(); closeM('mod-pick'); }
-            else { save(true); focusNotes(); }
+            if(!h.notes) { save(); closeM('mod-pick'); }
+            else { save(true); renderPickerOptions(); triggerFocus(); }
         }
 
         function setT(t) {
@@ -258,18 +265,34 @@
             tags = h.multi ? (tags.includes(t) ? tags.filter(x => x !== t) : [...tags, t]) : [t];
             logs[activeDate][curHId].t = tags; logs[activeDate][curHId].done = true;
             if(!h.multi && !h.notes) { save(); closeM('mod-pick'); }
-            else { save(true); if(!h.multi) focusNotes(); else openPicker(curHId); }
+            else { save(true); renderPickerOptions(); if(!h.multi) triggerFocus(); }
         }
 
-        function focusNotes() {
-            const el = document.getElementById('pick-notes');
-            el.scrollIntoView({ behavior: 'smooth' });
-            el.focus();
+        function triggerFocus() {
+            if(!hasFocusedNotes) {
+                const el = document.getElementById('pick-notes');
+                el.scrollIntoView({ behavior: 'smooth' });
+                el.focus();
+                hasFocusedNotes = true;
+            }
         }
 
-        function clearEntry() { logs[activeDate][curHId] = { done: false, n: null, t: [], notes: '' }; save(); openPicker(curHId); }
+        function clearEntry(e) {
+            if(e) e.stopPropagation();
+            logs[activeDate][curHId] = { done: false, n: null, t: [], notes: '' };
+            save(true);
+            hasFocusedNotes = false;
+            openPicker(curHId);
+        }
+
+        function closePickerFinal(e) {
+            if(e) e.stopPropagation();
+            save();
+            document.getElementById('mod-pick').style.display = 'none';
+        }
+
         function ensureL(id) { if(!logs[activeDate]) logs[activeDate] = {}; if(!logs[activeDate][id]) logs[activeDate][id] = { done: false, n: null, t: [], notes: '' }; }
-        function save(silent=false) { localStorage.setItem('L_BREAD_FINAL', JSON.stringify(logs)); if(!silent) renderTrack(); }
+        function save(silent=false) { localStorage.setItem('L_BREAD_V4', JSON.stringify(logs)); if(!silent) renderTrack(); }
         function closeM(m) { document.getElementById(m).style.display = 'none'; renderTrack(); }
         function toggleCheck(id) { ensureL(id); logs[activeDate][id].done = !logs[activeDate][id].done; save(); }
 
@@ -338,10 +361,11 @@
             document.getElementById('h-multi').checked = h.multi; document.getElementById('h-notes').checked = h.notes;
             document.getElementById('forge-btn').innerText = "UPDATE HABIT";
             document.getElementById('cancel-btn').classList.remove('hidden');
+            nav('build');
         }
 
         function resetBuilder() { editId = null; document.getElementById('form-wrap').querySelectorAll('input, textarea').forEach(el => el.type==='checkbox'?el.checked=false:el.value=''); document.getElementById('forge-btn').innerText="Forge Habit"; document.getElementById('cancel-btn').classList.add('hidden'); }
-        function delH(id) { if(confirm('Delete?')) { manifest = manifest.filter(x => x.id !== id); localStorage.setItem('M_BREAD_FINAL', JSON.stringify(manifest)); renderManifest(); } }
+        function delH(id) { if(confirm('Delete?')) { manifest = manifest.filter(x => x.id !== id); localStorage.setItem('M_BREAD_V4', JSON.stringify(manifest)); renderManifest(); } }
         
         nav('track');
     </script>
