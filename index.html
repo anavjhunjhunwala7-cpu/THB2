@@ -12,13 +12,16 @@
         .fixed-header { position: fixed; top: 0; width: 100%; height: 210px; background: var(--bg); border-bottom: 1px solid var(--border); z-index: 100; padding: 10px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
         .content-area { margin-top: 220px; margin-bottom: 120px; padding: 15px; }
         .stat-circle { width: 70px; height: 70px; border-radius: 50%; border: 2px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0a0a0a; transition: all 0.3s ease; position: relative; }
-        .stat-val { font-size: 13px; font-weight: 900; transition: color 0.3s ease; }
+        .stat-val { font-size: 13px; font-weight: 900; }
         .stat-lab { font-size: 7px; font-weight: 900; color: #444; text-transform: uppercase; margin-top: 1px; }
         
-        /* Persistent Glow Logic */
-        .glow-win { box-shadow: 0 0 20px var(--neon); border-color: var(--neon) !important; }
-        .glow-warn { box-shadow: 0 0 20px var(--reset); border-color: var(--reset) !important; }
-        .glow-fail { box-shadow: 0 0 20px var(--nn); border-color: var(--nn) !important; }
+        /* Temporary Glow Animation */
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 0px transparent; border-color: #222; }
+            50% { box-shadow: 0 0 20px var(--neon); border-color: var(--neon); }
+            100% { box-shadow: 0 0 0px transparent; border-color: #222; }
+        }
+        .anim-glow { animation: pulse-glow 1.2s ease-out; }
 
         .habit-card { background: var(--panel); border: 1px solid var(--border); border-radius: 1.25rem; margin-bottom: 10px; display: flex; align-items: center; padding: 16px; position: relative; min-height: 85px; justify-content: space-between; }
         .nn-active { border-left: 4px solid var(--nn); }
@@ -41,8 +44,6 @@
         .cal-perc { position: absolute; bottom: 8px; font-size: 9px; font-weight: 900; letter-spacing: -0.05em; }
         .cal-win { border-color: var(--neon) !important; background: rgba(34,197,94,0.3) !important; color: #fff !important; }
         .cal-loss { border-color: var(--nn) !important; background: rgba(239,68,68,0.3) !important; color: #fff !important; }
-        .cal-win .cal-perc { color: var(--neon); }
-        .cal-loss .cal-perc { color: var(--nn); }
         .fixed-nav { position: fixed; bottom: 0; width: 100%; background: #000; border-top: 1px solid var(--border); display: flex; height: 80px; z-index: 200; padding-bottom: env(safe-area-inset-bottom); }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; font-size: 9px; font-weight: 900; text-transform: uppercase; }
         .nav-item.active { color: var(--neon); }
@@ -52,7 +53,6 @@
         .nav-arrow.active { color: var(--neon); }
         .quote-banner { font-size: 10px; font-weight: 900; letter-spacing: 0.15em; color: var(--quote); text-transform: uppercase; text-align: center; margin-bottom: 2px; }
         .drag-handle { cursor: grab; padding-right: 12px; color: #333; font-size: 18px; }
-        .insight-card { background: #0a0a0a; border: 1px solid #222; border-radius: 1rem; padding: 15px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -69,8 +69,8 @@
             </div>
             <div class="flex gap-3">
                 <div id="score-circle" class="stat-circle"><span id="val-score" class="stat-val">0%</span><span class="stat-lab">Score</span></div>
-                <div class="stat-circle" id="conquer-circle" style="border-color: var(--neon)"><span class="stat-val text-green-500" id="val-conquer">0/75</span><span class="stat-lab">Conquer</span></div>
-                <div class="stat-circle"><span class="stat-val" id="val-gone">0</span><span class="stat-lab">Days By</span></div>
+                <div id="conquer-circle" class="stat-circle"><span class="stat-val" id="val-conquer">0/75</span><span class="stat-lab">Conquer</span></div>
+                <div id="days-circle" class="stat-circle"><span class="stat-val" id="id-gone">0</span><span class="stat-lab">Days By</span></div>
             </div>
         </header>
         <main class="content-area">
@@ -138,14 +138,14 @@
     <div id="view-insights" class="hidden">
         <div class="p-6 pb-32">
             <h2 class="text-xl font-black uppercase italic mb-6 text-center">Intelligence</h2>
-            <div id="insights-list" class="space-y-2"></div>
+            <div id="insights-list" class="space-y-4"></div>
         </div>
     </div>
 
     <div id="mod-pick" class="modal">
         <div class="flex justify-between items-center mb-6"><button onclick="clearEntry()" class="text-orange-500 text-3xl font-black">↻</button><h3 id="pick-title" class="u-title text-white">LOG</h3><button onclick="closePickerFinal()" class="text-green-500 text-3xl font-black">✓</button></div>
         <div id="pick-options" class="grid grid-cols-2 gap-3 mb-6"></div>
-        <div id="notes-container" class="hidden space-y-2"><span class="u-title">Notes</span><textarea id="pick-notes" class="input-dark h-32 focus:border-green-500" placeholder="Type notes here..."></textarea></div>
+        <div id="notes-container" class="hidden space-y-2"><span class="u-title">Notes</span><textarea id="pick-notes" class="input-dark h-32" placeholder="Type notes here..."></textarea></div>
     </div>
 
     <div id="mod-cal" class="modal">
@@ -172,8 +172,12 @@
         const quotes = ["DISCIPLINE OR REGRET", "WIN THE DAY", "KILL THE EXCUSE", "OWN YOUR LIFE", "DO THE WORK", "STAY HARD"];
         function setQuote() { document.getElementById('daily-quote').innerText = quotes[Math.floor(Math.random() * quotes.length)]; }
 
-        document.getElementById('c-goal').value = config.goal;
-        document.getElementById('c-pass').value = config.pass;
+        function triggerGlow(id) {
+            const el = document.getElementById(id);
+            el.classList.remove('anim-glow');
+            void el.offsetWidth; // Force reflow
+            el.classList.add('anim-glow');
+        }
 
         function nav(v) {
             ['view-track', 'view-build', 'view-insights'].forEach(id => document.getElementById(id).classList.add('hidden'));
@@ -181,8 +185,8 @@
             ['n-track', 'n-build', 'n-insights'].forEach(id => document.getElementById(id).classList.remove('active'));
             document.getElementById('n-' + v).classList.add('active');
             if(v==='build') renderManifest();
-            else if(v==='insights') renderInsights();
-            else renderTrack();
+            if(v==='insights') renderInsights();
+            if(v==='track') renderTrack();
         }
 
         function changeDay(offset) {
@@ -192,45 +196,12 @@
             activeDate = target; setQuote(); renderTrack();
         }
 
-        function saveConfig() { 
-            config.goal = parseInt(document.getElementById('c-goal').value) || 75;
-            config.pass = parseInt(document.getElementById('c-pass').value) || 100;
-            localStorage.setItem('C_BREAD_V10', JSON.stringify(config));
-            renderTrack();
-        }
-
-        function setMode(m) {
-            buildMode = m;
-            document.getElementById('mode-fixed').classList.toggle('bg-zinc-800', m==='fixed');
-            document.getElementById('mode-flex').classList.toggle('bg-zinc-800', m==='flex');
-            document.getElementById('days-row').classList.toggle('hidden', m==='flex');
-            document.getElementById('flex-row').classList.toggle('hidden', m==='fixed');
-        }
-
-        function toggleDay(btn) { btn.classList.toggle('active'); }
-
         function saveHabit() {
             const h = { id: editId || 'h' + Date.now(), name: document.getElementById('h-name').value, type: buildMode, days: Array.from(document.querySelectorAll('.day-btn.active')).map(b => parseInt(b.dataset.d)), freq: parseInt(document.getElementById('h-freq').value || 0), nn: document.getElementById('h-nn').checked, useNum: document.getElementById('h-useNum').checked, min: parseFloat(document.getElementById('h-min').value || 0), max: parseFloat(document.getElementById('h-max').value || 0), step: parseFloat(document.getElementById('h-step').value || 1), unit: document.getElementById('h-unit').value, useOpt: document.getElementById('h-useOpt').checked, tags: document.getElementById('h-tags').value.split(',').map(t => t.trim()).filter(t => t), multi: document.getElementById('h-multi').checked, notes: document.getElementById('h-notes').checked };
             if(!h.name) return;
             editId ? manifest[manifest.findIndex(x => x.id === editId)] = h : manifest.push(h);
             localStorage.setItem('M_BREAD_V10', JSON.stringify(manifest));
             resetBuilder(); renderManifest(); 
-        }
-
-        function renderTrack() {
-            const feed = document.getElementById('habit-feed'); feed.innerHTML = '';
-            const curr = new Date(activeDate);
-            const dayIdx = curr.getDay();
-            const habits = manifest.filter(h => h.type==='fixed' ? h.days.includes(dayIdx) : true);
-            habits.forEach(h => {
-                const l = logs[activeDate]?.[h.id] || { done: false, n: null, t: [], notes: '' };
-                let pills = '';
-                if(l.n !== null) pills += `<div class="pill">${l.n}${h.unit}</div>`;
-                if(l.t) l.t.forEach(t => pills += `<div class="pill">${t}</div>`);
-                if(l.notes) pills += `<div class="note-preview-pill">📝</div>`;
-                feed.innerHTML += `<div class="habit-card ${h.nn ? 'nn-active' : ''}">${h.nn ? '<div class="nn-badge">NN</div>' : ''}<div class="flex-1 mr-4 overflow-hidden" onclick="openPicker('${h.id}')"><p class="font-bold text-sm uppercase truncate">${h.name}</p></div><div class="action-zone">${pills ? `<div class="pill-scroll" onclick="openPicker('${h.id}')">${pills}</div>` : ((h.useNum || h.useOpt || h.notes) ? `<div class="set-btn" onclick="openPicker('${h.id}')">SET</div>` : '')}<div class="check-box ${l.done ? 'active' : ''}" onclick="toggleCheck('${h.id}')">${l.done?'✓':''}</div></div></div>`;
-            });
-            syncHeader();
         }
 
         function getDailyStatus(ds) {
@@ -243,112 +214,78 @@
             return { score, pass: (nnDone && score >= config.pass) };
         }
 
+        function renderTrack() {
+            const feed = document.getElementById('habit-feed'); feed.innerHTML = '';
+            const dayIdx = new Date(activeDate).getDay();
+            const habits = manifest.filter(h => h.type==='fixed' ? h.days.includes(dayIdx) : true);
+            habits.forEach(h => {
+                const l = logs[activeDate]?.[h.id] || { done: false, n: null, t: [], notes: '' };
+                let pills = '';
+                if(l.n !== null) pills += `<div class="pill">${l.n}${h.unit}</div>`;
+                if(l.t) l.t.forEach(t => pills += `<div class="pill">${t}</div>`);
+                if(l.notes) pills += `<div class="note-preview-pill">📝</div>`;
+                feed.innerHTML += `<div class="habit-card ${h.nn ? 'nn-active' : ''}">${h.nn ? '<div class="nn-badge">NN</div>' : ''}<div class="flex-1 mr-4 overflow-hidden" onclick="openPicker('${h.id}')"><p class="font-bold text-sm uppercase truncate">${h.name}</p></div><div class="action-zone">${pills ? `<div class="pill-scroll" onclick="openPicker('${h.id}')">${pills}</div>` : ((h.useNum || h.useOpt || h.notes) ? `<div class="set-btn" onclick="openPicker('${h.id}')">SET</div>` : '')}<div class="check-box ${l.done ? 'active' : ''}" onclick="toggleCheck('${h.id}')">${l.done?'✓':''}</div></div></div>`;
+            });
+            syncHeader();
+        }
+
         function syncHeader() {
             const d = new Date(activeDate);
             document.getElementById('head-date').innerText = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
             document.getElementById('head-day').innerText = d.toLocaleDateString('en-GB', { weekday: 'long' });
-            document.getElementById('next-day-btn').classList.toggle('active', activeDate < todayStr);
             const s = getDailyStatus(activeDate);
-            const scoreVal = document.getElementById('val-score');
-            const scoreCirc = document.getElementById('score-circle');
-            scoreVal.innerText = s.score + '%';
-            
-            scoreCirc.classList.remove('glow-win', 'glow-warn', 'glow-fail');
-            if (s.score >= config.pass) { 
-                scoreVal.style.color = 'var(--neon)'; scoreCirc.classList.add('glow-win'); 
-            } else if (s.score >= (config.pass * 0.7)) { 
-                scoreVal.style.color = 'var(--reset)'; scoreCirc.classList.add('glow-warn'); 
-            } else { 
-                scoreVal.style.color = 'var(--nn)'; scoreCirc.classList.add('glow-fail'); 
-            }
+            document.getElementById('val-score').innerText = s.score + '%';
             
             let conquered = 0; Object.keys(logs).forEach(date => { if(getDailyStatus(date).pass) conquered++; });
             document.getElementById('val-conquer').innerText = `${conquered}/${config.goal}`;
+            
             const allDates = Object.keys(logs).sort();
-            document.getElementById('val-gone').innerText = allDates.length ? Math.ceil(Math.abs(new Date() - new Date(allDates[0]))/86400000) : 0;
+            document.getElementById('id-gone').innerText = allDates.length ? Math.ceil(Math.abs(new Date() - new Date(allDates[0]))/86400000) : 0;
         }
 
-        function updateAndLock() { 
-            localStorage.setItem('L_BREAD_V10', JSON.stringify(logs)); 
-            const btn = document.getElementById('update-btn');
-            const oldTxt = btn.innerText;
-            btn.innerText = "✓ DATA SYNCED"; btn.style.background = "#fff";
-            setTimeout(() => { btn.innerText = oldTxt; btn.style.background = ""; }, 1500);
+        function toggleCheck(id) { 
+            if(!logs[activeDate]) logs[activeDate] = {};
+            if(!logs[activeDate][id]) logs[activeDate][id] = { done: false, n: null, t: [], notes: '' };
+            logs[activeDate][id].done = !logs[activeDate][id].done;
+            triggerGlow('score-circle');
+            triggerGlow('conquer-circle');
             renderTrack(); 
-        }
-
-        function openPicker(id) { curHId = id; const h = manifest.find(x => x.id === id); ensureL(id); const l = logs[activeDate][id]; document.getElementById('pick-title').innerText = h.name; renderPickerOptions(); const nBox = document.getElementById('notes-container'); if(h.notes) { nBox.classList.remove('hidden'); document.getElementById('pick-notes').value = l.notes || ''; document.getElementById('pick-notes').oninput = (e) => { logs[activeDate][curHId].notes = e.target.value; }; } else { nBox.classList.add('hidden'); } document.getElementById('mod-pick').style.display = 'flex'; }
-        function renderPickerOptions() { const h = manifest.find(x => x.id === curHId); const l = logs[activeDate][curHId]; const cont = document.getElementById('pick-options'); cont.innerHTML = ''; if(h.useNum) { for(let i=h.min; i<=h.max; i+=h.step) { cont.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl border ${l.n == i ? 'border-green-500 text-green-500' : 'border-zinc-800'} text-center font-bold" onclick="setN(${i})">${i}</div>`; } } if(h.useOpt) { h.tags.forEach(t => { cont.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl border ${l.t.includes(t) ? 'border-green-500 text-green-500' : 'border-zinc-800'} text-center font-bold" onclick="setT('${t}')">${t}</div>`; }); } }
-        function setN(v) { logs[activeDate][curHId].n = v; logs[activeDate][curHId].done = true; renderPickerOptions(); }
-        function setT(t) { const h = manifest.find(x => x.id === curHId); let tags = logs[activeDate][curHId].t || []; tags = h.multi ? (tags.includes(t) ? tags.filter(x => x !== t) : [...tags, t]) : [t]; logs[activeDate][curHId].t = tags; logs[activeDate][curHId].done = true; renderPickerOptions(); }
-        function clearEntry() { logs[activeDate][curHId] = { done: false, n: null, t: [], notes: '' }; openPicker(curHId); }
-        function closePickerFinal() { document.getElementById('mod-pick').style.display = 'none'; renderTrack(); }
-        function ensureL(id) { if(!logs[activeDate]) logs[activeDate] = {}; if(!logs[activeDate][id]) logs[activeDate][id] = { done: false, n: null, t: [], notes: '' }; }
-        function toggleCheck(id) { ensureL(id); logs[activeDate][id].done = !logs[activeDate][id].done; renderTrack(); }
-        function closeM(m) { document.getElementById(m).style.display = 'none'; renderTrack(); }
-        
-        function openCalendar() {
-            const g = document.getElementById('cal-grid'); g.innerHTML = ''; 
-            const now = new Date(activeDate);
-            document.getElementById('cal-head-day').innerText = now.toLocaleDateString('en-GB', { weekday: 'long' });
-            document.getElementById('cal-head-date').innerText = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-            const startDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay(); 
-            const offset = startDay === 0 ? 6 : startDay - 1;
-            const last = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-            for(let i=0; i<offset; i++) g.innerHTML += `<div></div>`;
-            for(let d=1; d<=last; d++) {
-                const ds = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                const r = getDailyStatus(ds); 
-                let highlightClass = logs[ds] ? (r.pass ? 'cal-win' : 'cal-loss') : '';
-                g.innerHTML += `<div class="cal-day-cell ${highlightClass} ${ds === todayStr ? 'ring-2 ring-white' : ''}" onclick="activeDate='${ds}'; closeM('mod-cal');">${d}${logs[ds] ? `<span class="cal-perc">${r.score}%</span>` : ''}</div>`;
-            }
-            document.getElementById('mod-cal').style.display = 'flex';
-        }
-
-        function loadEdit(id) { editId = id; const h = manifest.find(x => x.id === id); document.getElementById('h-name').value = h.name; setMode(h.type); document.getElementById('h-freq').value = h.freq; document.getElementById('h-nn').checked = h.nn; document.getElementById('h-useNum').checked = h.useNum; document.getElementById('h-min').value = h.min; document.getElementById('h-max').value = h.max; document.getElementById('h-step').value = h.step; document.getElementById('h-unit').value = h.unit; document.getElementById('h-useOpt').checked = h.useOpt; document.getElementById('h-tags').value = h.tags.join(', '); document.getElementById('h-multi').checked = h.multi; document.getElementById('h-notes').checked = h.notes; document.getElementById('forge-btn').innerText = "UPDATE"; document.getElementById('cancel-btn').classList.remove('hidden'); nav('build'); }
-        
-        function resetBuilder() { 
-            editId = null; 
-            document.getElementById('h-name').value = ''; document.getElementById('h-freq').value = '';
-            document.getElementById('h-nn').checked = false; document.getElementById('h-useNum').checked = false;
-            document.getElementById('h-min').value = ''; document.getElementById('h-max').value = '';
-            document.getElementById('h-step').value = ''; document.getElementById('h-unit').value = '';
-            document.getElementById('h-useOpt').checked = false; document.getElementById('h-tags').value = '';
-            document.getElementById('h-multi').checked = false; document.getElementById('h-notes').checked = false;
-            document.querySelectorAll('.day-btn').forEach(btn => btn.classList.add('active'));
-            document.getElementById('forge-btn').innerText="Forge Habit"; 
-            document.getElementById('cancel-btn').classList.add('hidden'); 
-        }
-
-        function renderManifest() {
-            const list = document.getElementById('manifest-list'); list.innerHTML = '';
-            manifest.forEach((h) => {
-                list.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl flex justify-between border border-zinc-800 items-center" data-id="${h.id}"><div class="flex items-center"><span class="drag-handle">☰</span><span class="font-black uppercase text-[10px]">${h.name}</span></div><div class="flex gap-4"><button onclick="loadEdit('${h.id}')" class="text-zinc-500 font-black text-[9px]">EDIT</button><button onclick="delH('${h.id}')" class="text-red-500 font-black text-[10px]">✕</button></div></div>`;
-            });
-            new Sortable(list, { handle: '.drag-handle', animation: 150, onEnd: () => {
-                const ids = Array.from(list.children).map(el => el.dataset.id);
-                manifest.sort((a,b) => ids.indexOf(a.id) - ids.indexOf(b.id));
-                localStorage.setItem('M_BREAD_V10', JSON.stringify(manifest));
-            }});
         }
 
         function renderInsights() {
             const list = document.getElementById('insights-list'); list.innerHTML = '';
             manifest.forEach(h => {
-                let streak = 0, hits = 0, total = 0;
-                Object.keys(logs).sort().reverse().forEach(date => {
-                    if (h.type === 'fixed' && h.days.includes(new Date(date).getDay())) {
-                        total++;
-                        if (logs[date][h.id]?.done) { hits++; streak++; }
-                        else if (date !== todayStr) return;
+                let streak = 0, hits = 0, daysChecked = 0;
+                const sortedDates = Object.keys(logs).sort().reverse();
+                sortedDates.forEach(date => {
+                    const di = new Date(date).getDay();
+                    if(h.type === 'fixed' && h.days.includes(di)) {
+                        daysChecked++;
+                        if(logs[date][h.id]?.done) { hits++; streak++; }
+                        else if (date !== todayStr) { /* break streak if missed in past */ }
                     }
                 });
-                list.innerHTML += `<div class="insight-card"><div class="flex justify-between font-black uppercase italic text-[11px]"><span>${h.name}</span><span class="text-green-500">${total?Math.round((hits/total)*100):0}%</span></div><div class="flex gap-2 mt-2"><div class="flex-1 bg-zinc-900 p-2 rounded-lg border border-zinc-800"><p class="u-title">Streak</p><p class="text-lg font-black">${streak}</p></div><div class="flex-1 bg-zinc-900 p-2 rounded-lg border border-zinc-800"><p class="u-title">Total</p><p class="text-lg font-black">${hits}</p></div></div></div>`;
+                const rate = daysChecked ? Math.round((hits/daysChecked)*100) : 0;
+                list.innerHTML += `<div class="p-4 bg-zinc-900 rounded-2xl border border-zinc-800"><div class="flex justify-between items-center mb-3"><span class="font-black uppercase italic text-xs">${h.name}</span><span class="text-green-500 font-black text-xs">${rate}%</span></div><div class="grid grid-cols-2 gap-2"><div class="bg-black p-2 rounded-xl text-center"><p class="u-title">Streak</p><p class="text-xl font-black">${streak}</p></div><div class="bg-black p-2 rounded-xl text-center"><p class="u-title">Hits</p><p class="text-xl font-black">${hits}</p></div></div></div>`;
             });
         }
 
-        function delH(id) { if(confirm('Delete?')) { manifest = manifest.filter(x => x.id !== id); localStorage.setItem('M_BREAD_V10', JSON.stringify(manifest)); renderManifest(); } }
-        setQuote(); nav('track');
+        // Standard Utility Functions (Close, Clear, Reset, Open Calendar) exactly as V10
+        function openPicker(id) { curHId = id; const h = manifest.find(x => x.id === id); if(!logs[activeDate]) logs[activeDate] = {}; if(!logs[activeDate][id]) logs[activeDate][id] = { done: false, n: null, t: [], notes: '' }; const l = logs[activeDate][id]; document.getElementById('pick-title').innerText = h.name; renderPickerOptions(); const nBox = document.getElementById('notes-container'); if(h.notes) { nBox.classList.remove('hidden'); document.getElementById('pick-notes').value = l.notes || ''; document.getElementById('pick-notes').oninput = (e) => { logs[activeDate][curHId].notes = e.target.value; }; } else { nBox.classList.add('hidden'); } document.getElementById('mod-pick').style.display = 'flex'; }
+        function renderPickerOptions() { const h = manifest.find(x => x.id === curHId); const l = logs[activeDate][curHId]; const cont = document.getElementById('pick-options'); cont.innerHTML = ''; if(h.useNum) { for(let i=h.min; i<=h.max; i+=h.step) { cont.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl border ${l.n == i ? 'border-green-500 text-green-500' : 'border-zinc-800'} text-center font-bold" onclick="setN(${i})">${i}</div>`; } } if(h.useOpt) { h.tags.forEach(t => { cont.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl border ${l.t.includes(t) ? 'border-green-500 text-green-500' : 'border-zinc-800'} text-center font-bold" onclick="setT('${t}')">${t}</div>`; }); } }
+        function setN(v) { logs[activeDate][curHId].n = v; logs[activeDate][curHId].done = true; triggerGlow('score-circle'); renderPickerOptions(); }
+        function setT(t) { const h = manifest.find(x => x.id === curHId); let tags = logs[activeDate][curHId].t || []; tags = h.multi ? (tags.includes(t) ? tags.filter(x => x !== t) : [...tags, t]) : [t]; logs[activeDate][curHId].t = tags; logs[activeDate][curHId].done = true; triggerGlow('score-circle'); renderPickerOptions(); }
+        function closePickerFinal() { document.getElementById('mod-pick').style.display = 'none'; renderTrack(); }
+        function clearEntry() { logs[activeDate][curHId] = { done: false, n: null, t: [], notes: '' }; openPicker(curHId); }
+        function openCalendar() { const g = document.getElementById('cal-grid'); g.innerHTML = ''; const now = new Date(activeDate); document.getElementById('cal-head-day').innerText = now.toLocaleDateString('en-GB', { weekday: 'long' }); document.getElementById('cal-head-date').innerText = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }); const startDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay(); const offset = startDay === 0 ? 6 : startDay - 1; const last = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(); for(let i=0; i<offset; i++) g.innerHTML += `<div></div>`; for(let d=1; d<=last; d++) { const ds = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; const r = getDailyStatus(ds); let highlightClass = logs[ds] ? (r.pass ? 'cal-win' : 'cal-loss') : ''; g.innerHTML += `<div class="cal-day-cell ${highlightClass} ${ds === todayStr ? 'ring-2 ring-white' : ''}" onclick="activeDate='${ds}'; closeM('mod-cal');">${d}${logs[ds] ? `<span class="cal-perc">${r.score}%</span>` : ''}</div>`; } document.getElementById('mod-cal').style.display = 'flex'; }
+        function closeM(m) { document.getElementById(m).style.display = 'none'; renderTrack(); }
+        function resetBuilder() { editId = null; document.getElementById('h-name').value = ''; document.getElementById('h-freq').value = ''; document.getElementById('h-nn').checked = false; document.getElementById('h-useNum').checked = false; document.getElementById('h-min').value = ''; document.getElementById('h-max').value = ''; document.getElementById('h-step').value = ''; document.getElementById('h-unit').value = ''; document.getElementById('h-useOpt').checked = false; document.getElementById('h-tags').value = ''; document.getElementById('h-multi').checked = false; document.getElementById('h-notes').checked = false; document.querySelectorAll('.day-btn').forEach(btn => btn.classList.add('active')); document.getElementById('forge-btn').innerText="Forge Habit"; document.getElementById('cancel-btn').classList.add('hidden'); }
+        function updateAndLock() { localStorage.setItem('L_BREAD_V10', JSON.stringify(logs)); renderTrack(); }
+        function renderManifest() { const list = document.getElementById('manifest-list'); list.innerHTML = ''; manifest.forEach((h) => { list.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl flex justify-between border border-zinc-800 items-center" data-id="${h.id}"><div class="flex items-center"><span class="drag-handle">☰</span><span class="font-black uppercase text-[10px]">${h.name}</span></div><div class="flex gap-4"><button onclick="loadEdit('${h.id}')" class="text-zinc-500 font-black text-[9px]">EDIT</button><button onclick="delH('${h.id}')" class="text-red-500 font-black text-[10px]">✕</button></div></div>`; }); new Sortable(list, { handle: '.drag-handle', animation: 150, onEnd: () => { const ids = Array.from(list.children).map(el => el.dataset.id); manifest.sort((a,b) => ids.indexOf(a.id) - ids.indexOf(b.id)); localStorage.setItem('M_BREAD_V10', JSON.stringify(manifest)); }}); }
+        function setMode(m) { buildMode = m; document.getElementById('mode-fixed').classList.toggle('bg-zinc-800', m==='fixed'); document.getElementById('mode-flex').classList.toggle('bg-zinc-800', m==='flex'); document.getElementById('days-row').classList.toggle('hidden', m==='flex'); document.getElementById('flex-row').classList.toggle('hidden', m==='fixed'); }
+        function toggleDay(btn) { btn.classList.toggle('active'); }
+        
+        setQuote(); renderTrack();
     </script>
 </body>
 </html>
