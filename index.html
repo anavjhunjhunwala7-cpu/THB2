@@ -79,8 +79,8 @@
             </div>
             <div class="flex gap-3">
                 <div id="score-circle" class="stat-circle"><span id="val-score" class="stat-val">0%</span><span class="stat-lab">Score</span></div>
-                <div id="conquer-circle" class="stat-circle"><span class="stat-val" id="val-conquer">0/75</span><span class="stat-lab">Conquered</span></div>
-                <div id="days-circle" class="stat-circle"><span class="stat-val" id="val-gone">0</span><span class="stat-lab">Gone By</span></div>
+                <div id="conquer-circle" class="stat-circle"><span class="stat-val" id="val-conquer">0/75</span><span class="stat-lab">Conquer</span></div>
+                <div id="days-circle" class="stat-circle"><span class="stat-val" id="val-gone">0</span><span class="stat-lab">Days By</span></div>
             </div>
         </header>
         <main class="content-area">
@@ -244,10 +244,29 @@
         function renderTrack() {
             const feed = document.getElementById('habit-feed'); feed.innerHTML = '';
             const habits = manifest.filter(h => h.type==='fixed' ? h.days.includes(new Date(activeDate).getDay()) : true);
+            
+            // Weekly logic for Flexible Counter
+            const current = new Date(activeDate);
+            const startOfWeek = new Date(current);
+            startOfWeek.setDate(current.getDate() - (current.getDay() === 0 ? 6 : current.getDay() - 1));
+            
             habits.forEach(h => {
                 const l = logs[activeDate]?.[h.id] || { done: false, n: null, t: [], notes: '' };
+                
+                // Flex Counter logic
+                let flexDisplay = "";
+                if (h.type === 'flex') {
+                    let weeklyHits = 0;
+                    for (let i = 0; i < 7; i++) {
+                        const d = new Date(startOfWeek); d.setDate(startOfWeek.getDate() + i);
+                        const ds = d.toISOString().split('T')[0];
+                        if (logs[ds]?.[h.id]?.done) weeklyHits++;
+                    }
+                    flexDisplay = `<span class="text-zinc-600 ml-2">[${weeklyHits}/${h.freq}]</span>`;
+                }
+
                 let ps = ''; if(l.n !== null) ps += `<div class="pill">${l.n} ${h.unit}</div>`; if(l.t) l.t.forEach(t => ps += `<div class="pill">${t}</div>`); if(l.notes) ps += `<div class="note-preview-pill">${l.notes}</div>`;
-                feed.innerHTML += `<div class="habit-card ${h.nn ? 'nn-active' : ''}">${h.nn ? '<div class="nn-badge">NN</div>' : ''}<div class="flex-1 mr-4 overflow-hidden" onclick="openPicker('${h.id}')"><p class="font-bold text-sm uppercase truncate">${h.name}</p></div><div class="action-zone">${ps ? `<div class="pill-scroll" onclick="openPicker('${h.id}')">${ps}</div>` : ((h.useNum || h.useOpt || h.notes) ? `<div class="set-btn" onclick="openPicker('${h.id}')">SET</div>` : '')}<div class="check-box ${l.done ? 'active' : ''}" onclick="toggleCheck('${h.id}')">${l.done?'✓':''}</div></div></div>`;
+                feed.innerHTML += `<div class="habit-card ${h.nn ? 'nn-active' : ''}">${h.nn ? '<div class="nn-badge">NN</div>' : ''}<div class="flex-1 mr-4 overflow-hidden" onclick="openPicker('${h.id}')"><p class="font-bold text-sm uppercase truncate">${h.name} ${flexDisplay}</p></div><div class="action-zone">${ps ? `<div class="pill-scroll" onclick="openPicker('${h.id}')">${ps}</div>` : ((h.useNum || h.useOpt || h.notes) ? `<div class="set-btn" onclick="openPicker('${h.id}')">SET</div>` : '')}<div class="check-box ${l.done ? 'active' : ''}" onclick="toggleCheck('${h.id}')">${l.done?'✓':''}</div></div></div>`;
             });
             syncHeader();
         }
@@ -263,15 +282,12 @@
         }
 
         function getDailyStatus(ds) { const di = new Date(ds).getDay(); const habits = manifest.filter(h => h.type==='fixed' ? h.days.includes(di) : true); if(!habits.length) return { score: 100, pass: true }; let done = 0, nnDone = true; habits.forEach(h => { const l = logs[ds]?.[h.id]; if(l?.done) done++; if(h.nn && !l?.done) nnDone = false; }); const score = Math.round((done / habits.length) * 100); return { score, pass: (nnDone && score >= config.pass) }; }
-        
         function triggerSelectiveGlow(oldPass) { const s = getDailyStatus(activeDate); const scoreCirc = document.getElementById('score-circle'); const conqCirc = document.getElementById('conquer-circle'); scoreCirc.classList.remove('glow-win', 'glow-warn', 'glow-fail'); void scoreCirc.offsetWidth; if(s.score >= config.pass) scoreCirc.classList.add('glow-win'); else if(s.score >= (config.pass * 0.7)) scoreCirc.classList.add('glow-warn'); else scoreCirc.classList.add('glow-fail'); }
 
         function syncHeader() { 
             const d = new Date(activeDate); 
             document.getElementById('head-date').innerText = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }); 
             document.getElementById('head-day').innerText = d.toLocaleDateString('en-GB', { weekday: 'long' }); 
-            
-            // Score Circle Traffic Logic
             const s = getDailyStatus(activeDate); 
             const sv = document.getElementById('val-score'); 
             const sc = document.getElementById('score-circle');
@@ -279,23 +295,18 @@
             let scoreColor = 'var(--nn)';
             if (s.score >= config.pass) scoreColor = 'var(--neon)';
             else if (s.score >= config.pass * 0.7) scoreColor = 'var(--reset)';
-            sv.style.color = scoreColor;
-            sc.style.borderColor = scoreColor;
+            sv.style.color = scoreColor; sc.style.borderColor = scoreColor;
 
-            // Conquer Circle Progress Logic
             let conq = 0; Object.keys(logs).forEach(date => { if(getDailyStatus(date).pass) conq++; }); 
             const conqVal = document.getElementById('val-conquer');
             const conqCirc = document.getElementById('conquer-circle');
             conqVal.innerText = `${conq}/${config.goal}`;
-            
             const progress = (conq / config.goal) * 100;
             let conqColor = 'var(--nn)';
             if (progress >= 100) conqColor = 'var(--neon)';
             else if (progress >= 66) conqColor = 'var(--yellow)';
             else if (progress >= 34) conqColor = 'var(--reset)';
-            
-            conqVal.style.color = conqColor;
-            conqCirc.style.borderColor = conqColor;
+            conqVal.style.color = conqColor; conqCirc.style.borderColor = conqColor;
 
             const ad = Object.keys(logs).sort(); 
             document.getElementById('val-gone').innerText = ad.length ? Math.ceil(Math.abs(new Date() - new Date(ad[0]))/86400000) : 0; 
