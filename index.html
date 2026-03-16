@@ -20,35 +20,36 @@
         .content-area { margin-top: 270px; margin-bottom: 100px; padding: 20px; }
         .u-title { font-size: 9px; font-weight: 900; letter-spacing: 0.15em; text-transform: uppercase; color: #444; }
 
-        input[type="text"], input[type="number"], textarea { background: #0a0a0a; border: 1px solid #222; color: white; padding: 12px 16px; border-radius: 12px; width: 100%; outline: none; font-size: 15px; height: 50px; }
+        input, textarea { background: #0a0a0a; border: 1px solid #222; color: white; padding: 12px 16px; border-radius: 12px; width: 100%; outline: none; font-size: 15px; height: 50px; }
         
-        .habit-card { background: var(--panel); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1.25rem; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; position: relative; }
+        /* CARD & HORIZONTAL SCROLL */
+        .habit-card { background: var(--panel); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1.25rem; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; position: relative; height: 85px; }
+        .pill-container { display: flex; overflow-x: auto; white-space: nowrap; gap: 6px; padding-right: 10px; -ms-overflow-style: none; scrollbar-width: none; }
+        .pill-container::-webkit-scrollbar { display: none; }
+        .pill { flex: 0 0 auto; background: rgba(34,197,94,0.1); border: 1px solid var(--neon); color: var(--neon); padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; }
+
         .habit-card.nn-active { border-left: 4px solid var(--nn); }
         .nn-badge { position: absolute; left: 0; top: 0; font-size: 7px; background: var(--nn); color: white; padding: 1px 4px; font-weight: 900; border-bottom-right-radius: 6px; }
-
-        .pill { background: rgba(34,197,94,0.1); border: 1px solid var(--neon); color: var(--neon); padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; margin: 2px; }
         .set-btn { font-size: 10px; font-weight: 900; color: var(--neon); padding: 8px 16px; border: 1px dashed var(--neon); border-radius: 8px; }
 
-        .check-box { width: 44px; height: 44px; border: 2px solid #333; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+        .check-box { width: 44px; height: 44px; border: 2px solid #333; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .check-box.active { background: var(--neon); border-color: var(--neon); color: #000; }
 
         .cal-day { aspect-ratio: 1; border: 1px solid #222; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: #444; }
-        .cal-score { font-size: 7px; margin-top: 2px; }
-
         .fixed-nav { position: fixed; bottom: 0; width: 100%; background: #000; border-top: 1px solid var(--border); z-index: 200; display: flex; height: 80px; padding-bottom: env(safe-area-inset-bottom); }
         .nav-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; }
         .nav-link.active { color: var(--neon); border-top: 2px solid var(--neon); }
 
         .modal { position: fixed; inset: 0; background: #000; z-index: 1000; display: none; flex-direction: column; padding: 25px; }
         .day-btn { width: 100%; aspect-ratio: 1; background: #111; border: 1px solid #222; border-radius: 8px; font-size: 10px; font-weight: 900; color: #444; }
-        .day-btn.active { background: var(--neon); color: #000; }
+        .day-btn.active { background: var(--neon); color: #000; border-color: var(--neon); }
     </style>
 </head>
 <body>
 
     <div id="view-track">
         <header class="fixed-header">
-            <div class="quote-bar"><span class="quote-text">Execution is the only currency</span></div>
+            <div class="quote-bar"><span class="quote-text">REFINEMENT IS CONTINUOUS</span></div>
             <div class="cursor-pointer flex flex-col items-center mb-4" onclick="openCalendar()">
                 <p id="display-day" class="u-title text-green-500 mb-0">---</p>
                 <h2 id="display-date" class="text-4xl font-black italic uppercase tracking-tighter leading-none">---</h2>
@@ -68,6 +69,7 @@
             <h2 class="text-xl font-black italic uppercase">Constructor</h2>
             <div class="flex flex-col"><span class="u-title" style="font-size:7px">Goal</span><input type="number" id="campaign-goal" value="365" class="w-12 bg-transparent text-blue-500 font-black border-b border-zinc-800 text-right"></div>
         </div>
+
         <div class="space-y-4 bg-[#0a0a0a] p-6 rounded-[2rem] border border-zinc-900" id="builder-form">
             <input type="text" id="h-name" placeholder="HABIT NAME" class="font-bold">
             <div class="flex bg-zinc-900 p-1 rounded-xl">
@@ -83,32 +85,35 @@
                 <button class="day-btn active" data-day="6" onclick="this.classList.toggle('active')">S</button>
                 <button class="day-btn active" data-day="0" onclick="this.classList.toggle('active')">S</button>
             </div>
-            <div id="section-flex" class="hidden"><input type="number" id="h-freq" value="3" placeholder="Times/Week"></div>
+            <div id="section-flex" class="hidden"><input type="number" id="h-freq" placeholder="Times/Week"></div>
             <div class="flex items-center justify-between p-4 bg-zinc-900/40 rounded-xl"><span class="u-title">Non-Negotiable</span><input type="checkbox" id="h-nn" class="w-5 h-5"></div>
-            <div class="pt-4 border-t border-zinc-900 space-y-4">
+            
+            <div class="pt-4 border-t border-zinc-800 space-y-4">
                 <div class="flex justify-between items-center"><span class="u-title">Numeric</span><input type="checkbox" id="use-num"></div>
                 <div class="grid grid-cols-3 gap-2"><input type="number" id="h-min" placeholder="MIN"><input type="number" id="h-max" placeholder="MAX"><input type="number" id="h-step" placeholder="STEP"></div>
                 <input type="text" id="h-unit" placeholder="UNIT">
                 <div class="flex justify-between items-center"><span class="u-title">Tags</span><input type="checkbox" id="use-opt"></div>
-                <textarea id="h-tags" placeholder="Option A, Option B..."></textarea>
+                <textarea id="h-tags" placeholder="Option A, Option B..." style="height:80px !important"></textarea>
                 <div class="flex gap-4 items-center">
                     <label class="u-title flex items-center gap-2">Multi <input type="checkbox" id="h-multi"></label>
                     <label class="u-title flex items-center gap-2">Notes <input type="checkbox" id="use-text"></label>
                 </div>
             </div>
-            <button onclick="saveHabit()" class="w-full py-5 bg-white text-black font-black rounded-2xl text-[10px]">Forge Habit</button>
+            <div class="flex gap-2">
+                <button id="cancel-edit" class="hidden flex-1 py-5 bg-zinc-900 text-zinc-500 font-black rounded-2xl text-[10px]" onclick="resetForm()">CANCEL</button>
+                <button id="forge-btn" onclick="saveHabit()" class="flex-[2] py-5 bg-white text-black font-black rounded-2xl text-[10px]">FORGE HABIT</button>
+            </div>
         </div>
         <div id="manifest-list" class="mt-8 space-y-2"></div>
     </div>
 
     <div id="calendar-modal" class="modal">
-        <div class="flex justify-between items-center mb-8"><button onclick="closeM('calendar-modal')" class="w-12 h-12 bg-zinc-900 rounded-full">✕</button><h3 class="u-title">History</h3><div class="w-12"></div></div>
-        <div class="grid grid-cols-7 gap-2 mb-2 text-center text-[8px] font-black text-zinc-600"><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span></div>
+        <div class="flex justify-between items-center mb-8"><button onclick="closeM('calendar-modal')" class="w-12 h-12 bg-zinc-900 rounded-full">✕</button><h3 class="u-title">Campaign</h3><div class="w-12"></div></div>
         <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
     </div>
 
     <div id="picker-modal" class="modal">
-        <div class="flex justify-between items-center mb-8"><button onclick="closeM('picker-modal')" class="w-12 h-12 bg-zinc-900 rounded-full">✕</button><h3 id="modal-title" class="u-title">Log</h3><button onclick="closeM('picker-modal')" class="w-12 h-12 bg-green-500 text-black rounded-full">✓</button></div>
+        <div class="flex justify-between items-center mb-8"><button onclick="closeM('picker-modal')" class="w-12 h-12 bg-zinc-900 rounded-full">✕</button><h3 id="modal-title" class="u-title">LOG</h3><button onclick="closeM('picker-modal')" class="w-12 h-12 bg-green-500 text-black rounded-full">✓</button></div>
         <div id="modal-content" class="grid grid-cols-2 gap-3 overflow-y-auto mb-6"></div>
         <textarea id="modal-notes" placeholder="Notes..." class="hidden mt-4"></textarea>
         <button onclick="clearLog()" class="w-full py-4 mt-auto bg-red-900/20 text-red-500 font-black text-[9px] rounded-xl">Clear Entry</button>
@@ -120,10 +125,10 @@
     </nav>
 
     <script>
-        let manifest = JSON.parse(localStorage.getItem('M_FINAL')) || [];
-        let logs = JSON.parse(localStorage.getItem('L_FINAL')) || {};
+        let manifest = JSON.parse(localStorage.getItem('M_EVO')) || [];
+        let logs = JSON.parse(localStorage.getItem('L_EVO')) || {};
         let activeDate = new Date().toISOString().split('T')[0];
-        let activeType = 'fixed', curHId = null;
+        let activeType = 'fixed', curHId = null, editId = null;
 
         function nav(v) {
             document.getElementById('view-track').classList.toggle('hidden', v!=='track');
@@ -145,7 +150,7 @@
             const target = parseInt(document.getElementById('global-target').value || 80);
             const d = new Date(ds); const dayIdx = d.getDay();
             const habits = manifest.filter(h => h.type==='fixed' ? h.days.includes(dayIdx) : (getWeekCount(h.id, ds) < h.freq || logs[ds]?.[h.id]));
-            if(!habits.length) return { score: 0, pass: false, active: false };
+            if(!habits.length) return { score: 0, pass: false };
             let done = 0, nnFail = false;
             habits.forEach(h => {
                 const l = logs[ds]?.[h.id] || { n: null, t: [], c: false };
@@ -153,7 +158,7 @@
                 if(isDone) done++; else if(h.nn) nnFail = true;
             });
             const s = Math.round((done/habits.length)*100);
-            return { score: nnFail ? 0 : s, pass: !nnFail && s >= target, active: true };
+            return { score: nnFail ? 0 : s, pass: !nnFail && s >= target };
         }
 
         function renderTrack() {
@@ -164,18 +169,22 @@
             habits.forEach(h => {
                 const l = logs[activeDate]?.[h.id] || { n:null, t:[], c:false };
                 const isDone = (h.useNum?l.n!==null:true) && (h.useOpt?(l.t && l.t.length > 0):true) && ((!h.useNum&&!h.useOpt)?l.c:true);
-                let ui = '';
-                if(l.n!==null) ui+=`<div class="pill">${l.n} ${h.unit}</div>`;
-                if(l.t) l.t.forEach(t=>ui+=`<div class="pill">${t}</div>`);
-                if(!ui && (h.useNum||h.useOpt)) ui = `<div class="set-btn">SET</div>`;
+                
+                let pills = '';
+                if(l.n!==null) pills += `<div class="pill">${l.n} ${h.unit}</div>`;
+                if(l.t) l.t.forEach(t => pills += `<div class="pill">${t}</div>`);
 
-                feed.innerHTML += `<div class="habit-card ${h.nn?'nn-active':''}">
+                feed.innerHTML += `
+                <div class="habit-card ${h.nn?'nn-active':''}">
                     ${h.nn?'<div class="nn-badge">NN</div>':''}
-                    <div class="flex-1 font-black text-xs uppercase ${isDone?'text-white':'text-zinc-700'}">${h.name}</div>
-                    <div class="flex items-center gap-3"><div onclick="openP('${h.id}')">${ui}</div>
-                    <div class="check-box ${isDone?'active':''}" onclick="toggleH('${h.id}')">${isDone?'✓':''}</div></div></div>`;
+                    <div class="flex-1 overflow-hidden mr-4">
+                        <p class="font-black text-[10px] uppercase ${isDone?'text-white':'text-zinc-700'} mb-1 truncate">${h.name}</p>
+                        <div class="pill-container">${pills || (h.useNum||h.useOpt ? '<div class="set-btn">SET</div>' : '')}</div>
+                    </div>
+                    <div class="check-box ${isDone?'active':''}" onclick="toggleH('${h.id}')">${isDone?'✓':''}</div>
+                </div>`;
             });
-
+            
             const res = getScore(activeDate);
             document.getElementById('val-score').innerText = res.score + '%';
             document.getElementById('ring-score').style.borderColor = res.pass ? 'var(--neon)' : (res.score > 0 ? 'var(--nn)' : '#222');
@@ -188,12 +197,98 @@
             document.getElementById('val-gone').innerText = dates.length ? Math.ceil(Math.abs(new Date() - new Date(dates[0]))/86400000) : 0;
         }
 
+        function saveHabit() {
+            const hData = {
+                id: editId || 'h' + Date.now(),
+                name: document.getElementById('h-name').value,
+                type: activeType,
+                days: Array.from(document.querySelectorAll('.day-btn.active')).map(b => parseInt(b.dataset.day)),
+                freq: parseInt(document.getElementById('h-freq').value || 0),
+                nn: document.getElementById('h-nn').checked,
+                useNum: document.getElementById('use-num').checked,
+                useOpt: document.getElementById('use-opt').checked,
+                useText: document.getElementById('use-text').checked,
+                min: parseFloat(document.getElementById('h-min').value || 0),
+                max: parseFloat(document.getElementById('h-max').value || 0),
+                step: parseFloat(document.getElementById('h-step').value || 1),
+                unit: document.getElementById('h-unit').value || '',
+                tags: document.getElementById('h-tags').value.split(',').map(t => t.trim()).filter(t => t),
+                multi: document.getElementById('h-multi').checked
+            };
+
+            if(!hData.name) return;
+
+            if(editId) {
+                const idx = manifest.findIndex(x => x.id === editId);
+                manifest[idx] = hData;
+            } else {
+                manifest.push(hData);
+            }
+
+            localStorage.setItem('M_EVO', JSON.stringify(manifest));
+            resetForm();
+            nav('track');
+        }
+
+        function editHabit(id) {
+            editId = id;
+            const h = manifest.find(x => x.id === id);
+            document.getElementById('h-name').value = h.name;
+            setType(h.type);
+            document.querySelectorAll('.day-btn').forEach(b => {
+                b.classList.toggle('active', h.days.includes(parseInt(b.dataset.day)));
+            });
+            document.getElementById('h-freq').value = h.freq;
+            document.getElementById('h-nn').checked = h.nn;
+            document.getElementById('use-num').checked = h.useNum;
+            document.getElementById('h-min').value = h.min;
+            document.getElementById('h-max').value = h.max;
+            document.getElementById('h-step').value = h.step;
+            document.getElementById('h-unit').value = h.unit;
+            document.getElementById('use-opt').checked = h.useOpt;
+            document.getElementById('h-tags').value = h.tags.join(', ');
+            document.getElementById('h-multi').checked = h.multi;
+            document.getElementById('use-text').checked = h.useText;
+
+            document.getElementById('forge-btn').innerText = "UPDATE HABIT";
+            document.getElementById('cancel-edit').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            editId = null;
+            document.querySelectorAll('#builder-form input, #builder-form textarea').forEach(el => el.type === 'checkbox' ? el.checked = false : el.value = '');
+            document.getElementById('forge-btn').innerText = "FORGE HABIT";
+            document.getElementById('cancel-edit').classList.add('hidden');
+            setType('fixed');
+        }
+
+        function delHabit(id) {
+            if(confirm("DESTRUCTIVE ACTION: Delete this habit and all history?")) {
+                manifest = manifest.filter(x => x.id !== id);
+                localStorage.setItem('M_EVO', JSON.stringify(manifest));
+                renderManifest();
+            }
+        }
+
+        function renderManifest() {
+            const list = document.getElementById('manifest-list');
+            list.innerHTML = manifest.map(h => `
+                <div class="bg-zinc-900 p-4 rounded-xl flex justify-between items-center border border-zinc-800">
+                    <span class="text-[10px] font-black uppercase">${h.name}</span>
+                    <div class="flex gap-4 items-center">
+                        <button onclick="editHabit('${h.id}')" class="text-zinc-500 font-black text-[9px]">EDIT</button>
+                        <button onclick="delHabit('${h.id}')" class="text-red-600 font-black text-xs">✕</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
         function openCalendar() {
             const grid = document.getElementById('calendar-grid'); grid.innerHTML = '';
             const todayStr = new Date().toISOString().split('T')[0];
             const dates = Object.keys(logs).sort();
-            const firstLog = dates.length ? dates[0] : todayStr;
-            
+            const start = dates.length ? dates[0] : todayStr;
             const now = new Date(activeDate);
             const first = new Date(now.getFullYear(), now.getMonth(), 1);
             const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -203,16 +298,13 @@
             for(let d=1; d<=last.getDate(); d++) {
                 const cur = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 const res = getScore(cur);
-                let bg = 'transparent', bdr = '#222', scoreTxt = '';
-                
-                // ONLY RED/GREEN IF BETWEEN START DATE AND TODAY
-                if(cur >= firstLog && cur <= todayStr) {
+                let bg = 'transparent', bdr = '#222', score = '';
+                if(cur >= start && cur <= todayStr) {
                     bg = res.pass ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)';
                     bdr = res.pass ? 'var(--neon)' : 'var(--nn)';
-                    scoreTxt = `<span class="cal-score">${res.score}%</span>`;
+                    score = `<span class="text-[6px] mt-1">${res.score}%</span>`;
                 }
-
-                grid.innerHTML += `<div class="cal-day" style="background:${bg}; border-color:${bdr}" onclick="selDate('${cur}')">${d}${scoreTxt}</div>`;
+                grid.innerHTML += `<div class="cal-day" style="background:${bg}; border-color:${bdr}" onclick="selDate('${cur}')">${d}${score}</div>`;
             }
             document.getElementById('calendar-modal').style.display = 'flex';
         }
@@ -225,20 +317,10 @@
             if(h.useNum) for(let i=h.min; i<=h.max; i+=h.step) c.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl border ${l.n===i?'border-green-500 text-green-500':'border-zinc-800'} text-center font-bold" onclick="setN(${i})">${i} ${h.unit}</div>`;
             if(h.useOpt) h.tags.forEach(t => c.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl border ${(l.t && l.t.includes(t))?'border-green-500 text-green-500':'border-zinc-800'} text-center font-bold" onclick="setT('${t}')">${t}</div>`);
             const na = document.getElementById('modal-notes');
-            na.className = h.useText ? 'block bg-zinc-900 p-4 rounded-xl text-white outline-none w-full mb-4 h-24' : 'hidden';
+            na.className = h.useText ? 'block bg-zinc-900 p-4 rounded-xl text-white w-full mb-4 h-24' : 'hidden';
             na.value = l.txt || '';
             na.oninput = (e) => { ensureL(); logs[activeDate][curHId].txt = e.target.value; save(); };
             document.getElementById('picker-modal').style.display = 'flex';
-        }
-
-        function saveHabit() {
-            const h = { id: 'h'+Date.now(), name: document.getElementById('h-name').value, type: activeType, days: Array.from(document.querySelectorAll('.day-btn.active')).map(b => parseInt(b.dataset.day)), freq: parseInt(document.getElementById('h-freq').value || 0), nn: document.getElementById('h-nn').checked, useNum: document.getElementById('use-num').checked, useOpt: document.getElementById('use-opt').checked, useText: document.getElementById('use-text').checked, min: parseFloat(document.getElementById('h-min').value || 0), max: parseFloat(document.getElementById('h-max').value || 0), step: parseFloat(document.getElementById('h-step').value || 1), unit: document.getElementById('h-unit').value || '', tags: document.getElementById('h-tags').value.split(',').map(t => t.trim()).filter(t => t), multi: document.getElementById('h-multi').checked };
-            if(h.name) {
-                manifest.push(h); localStorage.setItem('M_FINAL', JSON.stringify(manifest));
-                // RESET FORM
-                document.querySelectorAll('#builder-form input, #builder-form textarea').forEach(el => el.type === 'checkbox' ? el.checked = false : el.value = '');
-                nav('track');
-            }
         }
 
         function getWeekCount(id, ds) {
@@ -248,21 +330,20 @@
             for(let i=0; i<7; i++) {
                 const k = new Date(mon); k.setDate(mon.getDate()+i);
                 const ks = k.toISOString().split('T')[0];
-                if(logs[ks]?.[id] && (logs[ks][id].c || logs[ks][id].n!==null)) c++;
+                if(logs[ks]?.[id] && (logs[ks][id].c || logs[ks][id].n !== null)) c++;
             }
             return c;
         }
 
-        function clearLog() { ensureL(); logs[activeDate][curHId] = {n:null, t:[], txt:'', c:false}; save(); closeM('picker-modal'); }
         function setN(v) { ensureL(); logs[activeDate][curHId].n = v; save(); openP(curHId); }
         function setT(t) { ensureL(); const h = manifest.find(x=>x.id===curHId); let l = logs[activeDate][curHId]; if(!l.t) l.t = []; l.t = h.multi ? (l.t.includes(t)?l.t.filter(x=>x!==t):[...l.t,t]) : [t]; save(); openP(curHId); }
         function toggleH(id) { curHId = id; ensureL(); logs[activeDate][id].c = !logs[activeDate][id].c; save(); }
         function selDate(ds) { activeDate = ds; closeM('calendar-modal'); renderTrack(); }
         function ensureL() { if(!logs[activeDate]) logs[activeDate] = {}; if(!logs[activeDate][curHId]) logs[activeDate][curHId] = { n:null, t:[], txt:'', c:false }; }
-        function save() { localStorage.setItem('L_FINAL', JSON.stringify(logs)); renderTrack(); }
+        function save() { localStorage.setItem('L_EVO', JSON.stringify(logs)); renderTrack(); }
         function closeM(m) { document.getElementById(m).style.display = 'none'; }
-        function renderManifest() { document.getElementById('manifest-list').innerHTML = manifest.map(h => `<div class="bg-zinc-900 p-4 rounded-xl flex justify-between items-center text-[10px] font-bold"><span>${h.name.toUpperCase()}</span><button onclick="delH('${h.id}')">✕</button></div>`).join(''); }
-        function delH(id) { manifest = manifest.filter(x=>x.id!==id); localStorage.setItem('M_FINAL', JSON.stringify(manifest)); renderManifest(); }
+        function clearLog() { ensureL(); logs[activeDate][curHId] = {n:null, t:[], txt:'', c:false}; save(); closeM('picker-modal'); }
+
         nav('track');
     </script>
 </body>
