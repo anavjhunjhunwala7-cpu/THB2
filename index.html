@@ -15,6 +15,7 @@
         .stat-val { font-size: 13px; font-weight: 900; transition: color 0.3s ease; }
         .stat-lab { font-size: 7px; font-weight: 900; color: #444; text-transform: uppercase; margin-top: 1px; }
         
+        /* The Glow Animation */
         @keyframes glow {
             0% { box-shadow: 0 0 0px var(--neon); transform: scale(1); }
             50% { box-shadow: 0 0 20px var(--neon); transform: scale(1.05); }
@@ -37,18 +38,10 @@
         .day-btn.active { background: var(--neon); color: #000; border-color: var(--neon); }
         .u-title { font-size: 9px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; color: #555; }
         .modal { position: fixed; inset: 0; background: #000; z-index: 1000; display: none; flex-direction: column; padding: 20px; overflow-y: auto; }
-        
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
         .cal-header-cell { text-align: center; font-size: 10px; font-weight: 900; color: var(--neon); padding-bottom: 10px; }
-        .cal-day-cell { aspect-ratio: 1/1; border: 2px solid #222; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 8px; position: relative; font-weight: 900; font-size: 15px; background: #0a0a0a; color: #666; }
-        .cal-perc { position: absolute; bottom: 8px; font-size: 9px; font-weight: 900; letter-spacing: -0.05em; }
-        
-        /* Contrast Highlights */
-        .cal-win { border-color: var(--neon) !important; background: rgba(34,197,94,0.3) !important; color: #fff !important; }
-        .cal-loss { border-color: var(--nn) !important; background: rgba(239,68,68,0.3) !important; color: #fff !important; }
-        .cal-win .cal-perc { color: var(--neon); }
-        .cal-loss .cal-perc { color: var(--nn); }
-
+        .cal-day-cell { aspect-ratio: 1/1; border: 1px solid #222; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 8px; position: relative; font-weight: 800; font-size: 14px; background: #0a0a0a; }
+        .cal-perc { position: absolute; bottom: 8px; font-size: 9px; font-weight: 900; opacity: 1; letter-spacing: -0.05em; }
         .fixed-nav { position: fixed; bottom: 0; width: 100%; background: #000; border-top: 1px solid var(--border); display: flex; height: 80px; z-index: 200; padding-bottom: env(safe-area-inset-bottom); }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; font-size: 9px; font-weight: 900; text-transform: uppercase; }
         .nav-item.active { color: var(--neon); }
@@ -356,7 +349,6 @@
         function ensureL(id) { if(!logs[activeDate]) logs[activeDate] = {}; if(!logs[activeDate][id]) logs[activeDate][id] = { done: false, n: null, t: [], notes: '' }; }
         function toggleCheck(id) { ensureL(id); logs[activeDate][id].done = !logs[activeDate][id].done; renderTrack(); }
         function closeM(m) { document.getElementById(m).style.display = 'none'; renderTrack(); }
-        
         function openCalendar() {
             const g = document.getElementById('cal-grid'); g.innerHTML = ''; const now = new Date(activeDate);
             document.getElementById('cal-head-day').innerText = now.toLocaleDateString('en-GB', { weekday: 'long' });
@@ -366,16 +358,12 @@
             for(let i=0; i<offset; i++) g.innerHTML += `<div></div>`;
             for(let d=1; d<=last; d++) {
                 const ds = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                const r = getDailyStatus(ds); 
-                let highlightClass = '';
-                if(logs[ds]) { highlightClass = r.pass ? 'cal-win' : 'cal-loss'; }
-                g.innerHTML += `<div class="cal-day-cell ${highlightClass} ${ds === todayStr ? 'ring-2 ring-white' : ''}" onclick="activeDate='${ds}'; closeM('mod-cal');">${d}${logs[ds] ? `<span class="cal-perc">${r.score}%</span>` : ''}</div>`;
+                const r = getDailyStatus(ds); let sty = logs[ds] ? (r.pass ? 'border-color:var(--neon); background:rgba(34,197,94,0.1); color:var(--neon);' : 'border-color:var(--nn); background:rgba(239,68,68,0.1); color:var(--nn);') : '';
+                g.innerHTML += `<div class="cal-day-cell ${ds === todayStr ? 'ring-2 ring-white' : ''}" style="${sty}" onclick="activeDate='${ds}'; closeM('mod-cal');">${d}${logs[ds] ? `<span class="cal-perc">${r.score}%</span>` : ''}</div>`;
             }
             document.getElementById('mod-cal').style.display = 'flex';
         }
-
         function loadEdit(id) { editId = id; const h = manifest.find(x => x.id === id); document.getElementById('h-name').value = h.name; setMode(h.type); document.getElementById('h-freq').value = h.freq; document.getElementById('h-nn').checked = h.nn; document.getElementById('h-useNum').checked = h.useNum; document.getElementById('h-min').value = h.min; document.getElementById('h-max').value = h.max; document.getElementById('h-unit').value = h.unit; document.getElementById('h-useOpt').checked = h.useOpt; document.getElementById('h-tags').value = h.tags.join(', '); document.getElementById('forge-btn').innerText = "UPDATE"; document.getElementById('cancel-btn').classList.remove('hidden'); nav('build'); }
-        
         function resetBuilder() { 
             editId = null; 
             document.getElementById('h-name').value = '';
@@ -386,12 +374,9 @@
             document.getElementById('h-tags').value = '';
             document.getElementById('h-multi').checked = false;
             document.getElementById('h-notes').checked = false;
-            // Reset day buttons to active
-            document.querySelectorAll('.day-btn').forEach(btn => btn.classList.add('active'));
             document.getElementById('forge-btn').innerText="Forge Habit"; 
             document.getElementById('cancel-btn').classList.add('hidden'); 
         }
-
         function delH(id) { if(confirm('Delete?')) { manifest = manifest.filter(x => x.id !== id); localStorage.setItem('M_BREAD_V10', JSON.stringify(manifest)); renderManifest(); } }
         setQuote(); nav('track');
     </script>
