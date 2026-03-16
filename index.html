@@ -9,6 +9,8 @@
         :root { --neon: #22c55e; --bg: #000000; --panel: #111111; --border: #222222; --nn: #ef4444; --reset: #f97316; --quote: #f97316; }
         body { background: var(--bg); color: #fff; font-family: -apple-system, system-ui, sans-serif; margin: 0; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
         
+        .hidden { display: none !important; }
+        
         .fixed-header { position: fixed; top: 0; width: 100%; height: 210px; background: var(--bg); border-bottom: 1px solid var(--border); z-index: 100; padding: 10px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
         .content-area { margin-top: 220px; margin-bottom: 120px; padding: 15px; }
         
@@ -54,7 +56,6 @@
         .drag-handle { cursor: grab; padding: 0 12px; color: #444; font-size: 18px; display: flex; align-items: center; }
         .dragging { opacity: 0.4; border: 1px solid var(--neon) !important; }
 
-        /* INSIGHTS SPECIFIC */
         .insight-card { background: var(--panel); border: 1px solid var(--border); border-radius: 1rem; padding: 15px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .period-btn { padding: 6px 12px; border-radius: 8px; background: #111; border: 1px solid #222; font-size: 9px; font-weight: 900; color: #555; }
         .period-btn.active { border-color: var(--neon); color: var(--neon); }
@@ -85,82 +86,80 @@
         </main>
     </div>
 
-    <div id="view-build" class="hidden p-6 pb-32">
-        <div class="mb-8 p-4 bg-zinc-900 rounded-2xl border border-zinc-800">
-            <h2 class="u-title text-white mb-4 text-center">Campaign Command</h2>
-            <div class="grid grid-cols-2 gap-3">
-                <div class="space-y-1">
-                    <label class="text-[8px] font-black text-zinc-500 uppercase">Goal Days</label>
-                    <input type="number" id="c-goal" class="input-dark p-2 text-sm" placeholder="75" onchange="saveConfig()">
-                </div>
-                <div class="space-y-1">
-                    <label class="text-[8px] font-black text-zinc-500 uppercase">Pass Goal %</label>
-                    <input type="number" id="c-pass" class="input-dark p-2 text-sm" placeholder="100" onchange="saveConfig()">
-                </div>
-            </div>
-        </div>
-
-        <h2 class="text-xl font-black uppercase italic mb-6 text-center">Constructor</h2>
-        <div class="space-y-4" id="form-wrap">
-            <input type="text" id="h-name" placeholder="HABIT NAME" class="input-dark font-black">
-            <div class="flex bg-zinc-900 p-1 rounded-xl">
-                <button id="mode-fixed" class="flex-1 py-3 text-[9px] font-black rounded-lg bg-zinc-800" onclick="setMode('fixed')">FIXED</button>
-                <button id="mode-flex" class="flex-1 py-3 text-[9px] font-black text-zinc-500 rounded-lg" onclick="setMode('flex')">FLEXIBLE</button>
-            </div>
-            <div id="days-row" class="grid grid-cols-7 gap-1">
-                <button class="day-btn active" data-d="1" onclick="toggleDay(this)">M</button>
-                <button class="day-btn active" data-d="2" onclick="toggleDay(this)">T</button>
-                <button class="day-btn active" data-d="3" onclick="toggleDay(this)">W</button>
-                <button class="day-btn active" data-d="4" onclick="toggleDay(this)">T</button>
-                <button class="day-btn active" data-d="5" onclick="toggleDay(this)">F</button>
-                <button class="day-btn active" data-d="6" onclick="toggleDay(this)">S</button>
-                <button class="day-btn active" data-d="0" onclick="toggleDay(this)">S</button>
-            </div>
-            <div id="flex-row" class="hidden"><input type="number" id="h-freq" placeholder="Times/Week" class="input-dark"></div>
-            <div class="flex justify-between items-center p-4 bg-zinc-900 rounded-xl"><span class="u-title text-white">Non-Negotiable</span><input type="checkbox" id="h-nn" class="w-5 h-5 accent-green-500"></div>
-            
-            <div class="grid grid-cols-2 gap-3">
-                <div class="p-3 bg-zinc-900 rounded-xl space-y-2">
-                    <div class="flex justify-between items-center"><span class="u-title text-white">Numeric</span><input type="checkbox" id="h-useNum" class="w-5 h-5 accent-green-500"></div>
-                    <div class="grid grid-cols-2 gap-1">
-                        <input type="number" id="h-min" placeholder="Min" class="input-dark text-[10px] p-2">
-                        <input type="number" id="h-max" placeholder="Max" class="input-dark text-[10px] p-2">
-                        <input type="number" id="h-step" placeholder="Step" class="input-dark text-[10px] p-2">
-                        <input type="text" id="h-unit" placeholder="Unit" class="input-dark text-[10px] p-2">
+    <div id="view-build" class="hidden">
+        <div class="p-6 pb-32">
+            <div class="mb-8 p-4 bg-zinc-900 rounded-2xl border border-zinc-800">
+                <h2 class="u-title text-white mb-4 text-center">Campaign Command</h2>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <label class="text-[8px] font-black text-zinc-500 uppercase">Goal Days</label>
+                        <input type="number" id="c-goal" class="input-dark p-2 text-sm" placeholder="75" onchange="saveConfig()">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[8px] font-black text-zinc-500 uppercase">Pass Goal %</label>
+                        <input type="number" id="c-pass" class="input-dark p-2 text-sm" placeholder="100" onchange="saveConfig()">
                     </div>
                 </div>
-                <div class="p-3 bg-zinc-900 rounded-xl space-y-2">
-                    <div class="flex justify-between items-center"><span class="u-title text-white">Tags</span><input type="checkbox" id="h-useOpt" class="w-5 h-5 accent-green-500"></div>
-                    <textarea id="h-tags" placeholder="Tag 1, Tag 2..." class="input-dark text-xs h-20"></textarea>
+            </div>
+            <h2 class="text-xl font-black uppercase italic mb-6 text-center">Constructor</h2>
+            <div class="space-y-4" id="form-wrap">
+                <input type="text" id="h-name" placeholder="HABIT NAME" class="input-dark font-black">
+                <div class="flex bg-zinc-900 p-1 rounded-xl">
+                    <button id="mode-fixed" class="flex-1 py-3 text-[9px] font-black rounded-lg bg-zinc-800" onclick="setMode('fixed')">FIXED</button>
+                    <button id="mode-flex" class="flex-1 py-3 text-[9px] font-black text-zinc-500 rounded-lg" onclick="setMode('flex')">FLEXIBLE</button>
                 </div>
+                <div id="days-row" class="grid grid-cols-7 gap-1">
+                    <button class="day-btn active" data-d="1" onclick="toggleDay(this)">M</button>
+                    <button class="day-btn active" data-d="2" onclick="toggleDay(this)">T</button>
+                    <button class="day-btn active" data-d="3" onclick="toggleDay(this)">W</button>
+                    <button class="day-btn active" data-d="4" onclick="toggleDay(this)">T</button>
+                    <button class="day-btn active" data-d="5" onclick="toggleDay(this)">F</button>
+                    <button class="day-btn active" data-d="6" onclick="toggleDay(this)">S</button>
+                    <button class="day-btn active" data-d="0" onclick="toggleDay(this)">S</button>
+                </div>
+                <div id="flex-row" class="hidden"><input type="number" id="h-freq" placeholder="Times/Week" class="input-dark"></div>
+                <div class="flex justify-between items-center p-4 bg-zinc-900 rounded-xl"><span class="u-title text-white">Non-Negotiable</span><input type="checkbox" id="h-nn" class="w-5 h-5 accent-green-500"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="p-3 bg-zinc-900 rounded-xl space-y-2">
+                        <div class="flex justify-between items-center"><span class="u-title text-white">Numeric</span><input type="checkbox" id="h-useNum" class="w-5 h-5 accent-green-500"></div>
+                        <div class="grid grid-cols-2 gap-1">
+                            <input type="number" id="h-min" placeholder="Min" class="input-dark text-[10px] p-2"><input type="number" id="h-max" placeholder="Max" class="input-dark text-[10px] p-2"><input type="number" id="h-step" placeholder="Step" class="input-dark text-[10px] p-2"><input type="text" id="h-unit" placeholder="Unit" class="input-dark text-[10px] p-2">
+                        </div>
+                    </div>
+                    <div class="p-3 bg-zinc-900 rounded-xl space-y-2">
+                        <div class="flex justify-between items-center"><span class="u-title text-white">Tags</span><input type="checkbox" id="h-useOpt" class="w-5 h-5 accent-green-500"></div>
+                        <textarea id="h-tags" placeholder="Tag 1, Tag 2..." class="input-dark text-xs h-20"></textarea>
+                    </div>
+                </div>
+                <div class="flex gap-4 p-4 bg-zinc-900 rounded-xl">
+                    <label class="flex items-center gap-2 u-title text-white">Multi <input type="checkbox" id="h-multi" class="w-5 h-5 accent-green-500"></label>
+                    <label class="flex items-center gap-2 u-title text-white">Notes <input type="checkbox" id="h-notes" class="w-5 h-5 accent-green-500"></label>
+                </div>
+                <button onclick="saveHabit()" id="forge-btn" class="w-full py-5 bg-white text-black font-black rounded-2xl uppercase text-[10px]">Forge Habit</button>
+                <button onclick="resetBuilder()" id="cancel-btn" class="hidden w-full py-2 text-zinc-600 font-bold text-[9px]">CANCEL EDIT</button>
             </div>
-
-            <div class="flex gap-4 p-4 bg-zinc-900 rounded-xl">
-                <label class="flex items-center gap-2 u-title text-white">Multi <input type="checkbox" id="h-multi" class="w-5 h-5 accent-green-500"></label>
-                <label class="flex items-center gap-2 u-title text-white">Notes <input type="checkbox" id="h-notes" class="w-5 h-5 accent-green-500"></label>
-            </div>
-            <button onclick="saveHabit()" id="forge-btn" class="w-full py-5 bg-white text-black font-black rounded-2xl uppercase text-[10px]">Forge Habit</button>
-            <button onclick="resetBuilder()" id="cancel-btn" class="hidden w-full py-2 text-zinc-600 font-bold text-[9px]">CANCEL EDIT</button>
+            <div id="manifest-list" class="mt-8 space-y-2"></div>
         </div>
-        <div id="manifest-list" class="mt-8 space-y-2"></div>
     </div>
 
-    <div id="view-insights" class="hidden p-6 pb-32">
-        <h2 class="text-xl font-black uppercase italic mb-6 text-center">Intelligence</h2>
-        <div class="flex gap-2 overflow-x-auto pb-4 mb-4 scrollbar-width:none">
-            <button class="period-btn active" data-p="7" onclick="setPeriod(7)">7D</button>
-            <button class="period-btn" data-p="14" onclick="setPeriod(14)">14D</button>
-            <button class="period-btn" data-p="21" onclick="setPeriod(21)">21D</button>
-            <button class="period-btn" data-p="30" onclick="setPeriod(30)">30D</button>
-            <button class="period-btn" data-p="all" onclick="setPeriod('all')">ALL</button>
-            <input type="number" id="custom-p" placeholder="Days" class="bg-zinc-900 border border-zinc-800 text-[9px] font-black rounded-lg p-1 w-16 outline-none" onchange="setPeriod(this.value)">
+    <div id="view-insights" class="hidden">
+        <div class="p-6 pb-32">
+            <h2 class="text-xl font-black uppercase italic mb-6 text-center">Intelligence</h2>
+            <div class="flex gap-2 overflow-x-auto pb-4 mb-4 scrollbar-width:none">
+                <button class="period-btn active" data-p="7" onclick="setPeriod(7)">7D</button>
+                <button class="period-btn" data-p="14" onclick="setPeriod(14)">14D</button>
+                <button class="period-btn" data-p="21" onclick="setPeriod(21)">21D</button>
+                <button class="period-btn" data-p="30" onclick="setPeriod(30)">30D</button>
+                <button class="period-btn" data-p="all" onclick="setPeriod('all')">ALL</button>
+                <input type="number" id="custom-p" placeholder="Days" class="bg-zinc-900 border border-zinc-800 text-[9px] font-black rounded-lg p-1 w-16 outline-none" onchange="setPeriod(this.value)">
+            </div>
+            <div id="insights-list" class="space-y-2"></div>
+            <button onclick="openBackup()" class="w-full py-4 mt-12 bg-zinc-900 border border-zinc-800 rounded-xl text-[9px] font-black text-zinc-500 uppercase tracking-widest">Data Backup & Recovery</button>
         </div>
-        <div id="insights-list" class="space-y-2"></div>
-        <button onclick="openBackup()" class="w-full py-4 mt-12 bg-zinc-900 border border-zinc-800 rounded-xl text-[9px] font-black text-zinc-500 uppercase tracking-widest">Data Backup & Recovery</button>
     </div>
 
     <div id="mod-pick" class="modal">
-        <div class="flex justify-between items-center mb-6"><button onclick="clearEntry(event)" class="text-orange-500 text-3xl font-black">↻</button><h3 id="pick-title" class="u-title text-white">LOG</h3><button onclick="closePickerFinal(event)" class="text-green-500 text-3xl font-black">✓</button></div>
+        <div class="flex justify-between items-center mb-6"><button onclick="clearEntry()" class="text-orange-500 text-3xl font-black">↻</button><h3 id="pick-title" class="u-title text-white">LOG</h3><button onclick="closePickerFinal()" class="text-green-500 text-3xl font-black">✓</button></div>
         <div id="pick-options" class="grid grid-cols-2 gap-3 mb-6"></div>
         <div id="notes-container" class="hidden space-y-2"><span class="u-title">Notes</span><textarea id="pick-notes" class="input-dark h-32 focus:border-green-500" placeholder="Type notes here..."></textarea></div>
     </div>
@@ -173,12 +172,9 @@
 
     <div id="mod-backup" class="modal">
         <div class="flex justify-between items-center mb-6"><button onclick="closeM('mod-backup')" class="text-2xl">✕</button><h3 class="u-title text-white text-center">Black Box</h3><div class="w-8"></div></div>
-        <p class="text-[10px] text-zinc-500 mb-4 text-center">Copy string to notes. Paste here to restore.</p>
+        <p class="text-[10px] text-zinc-500 mb-4 text-center">String Recovery System</p>
         <textarea id="backup-text" class="input-dark h-64 text-[10px] mb-4 font-mono"></textarea>
-        <div class="grid grid-cols-2 gap-3">
-            <button onclick="copyBackup()" class="btn-main bg-zinc-800 text-white">Copy Backup</button>
-            <button onclick="restoreBackup()" class="btn-main bg-red-900/30 border border-red-500 text-red-500">Restore</button>
-        </div>
+        <div class="grid grid-cols-2 gap-3"><button onclick="copyBackup()" class="btn-main bg-zinc-800 text-white">Copy</button><button onclick="restoreBackup()" class="btn-main bg-red-900/30 border border-red-500 text-red-500">Restore</button></div>
     </div>
 
     <nav class="fixed-nav">
@@ -195,8 +191,18 @@
         let todayStr = new Date().toISOString().split('T')[0];
         let buildMode = 'fixed', editId = null, curHId = null, insightPeriod = 7;
 
-        const quotes = ["DISCIPLINE OR REGRET", "WIN THE DAY", "KILL THE EXCUSE", "SURE OR JUST MAYBE?", "OWN YOUR LIFE", "DO THE WORK", "NO WAY OUT BUT THROUGH", "STAY HARD"];
+        const quotes = ["DISCIPLINE OR REGRET", "WIN THE DAY", "KILL THE EXCUSE", "OWN YOUR LIFE", "DO THE WORK", "STAY HARD"];
         function setQuote() { document.getElementById('daily-quote').innerText = quotes[Math.floor(Math.random() * quotes.length)]; }
+
+        function nav(v) {
+            ['view-track', 'view-build', 'view-insights'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById('view-' + v).classList.remove('hidden');
+            ['n-track', 'n-build', 'n-insights'].forEach(id => document.getElementById(id).classList.remove('active'));
+            document.getElementById('n-' + v).classList.add('active');
+            if(v==='build') renderManifest();
+            else if(v==='insights') renderInsights();
+            else renderTrack();
+        }
 
         function changeDay(offset) {
             let d = new Date(activeDate); d.setDate(d.getDate() + offset);
@@ -210,16 +216,6 @@
             config.pass = parseInt(document.getElementById('c-pass').value) || 100;
             localStorage.setItem('C_BREAD_V10', JSON.stringify(config));
             renderTrack();
-        }
-
-        function nav(v) {
-            document.querySelectorAll('.hidden').forEach(el => el.classList.add('hidden'));
-            document.getElementById('view-'+v).classList.remove('hidden');
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById('n-'+v).classList.add('active');
-            if(v==='build') { document.getElementById('c-goal').value = config.goal; document.getElementById('c-pass').value = config.pass; renderManifest(); }
-            else if(v==='insights') { renderInsights(); }
-            else { renderTrack(); }
         }
 
         function setMode(m) {
@@ -244,11 +240,8 @@
             const feed = document.getElementById('habit-feed'); feed.innerHTML = '';
             const curr = new Date(activeDate);
             const dayIdx = curr.getDay();
-            
-            // Get Monday of current week for Flexible counter
             const first = curr.getDate() - (dayIdx === 0 ? 6 : dayIdx - 1);
             const monday = new Date(new Date(curr).setDate(first));
-            
             const habits = manifest.filter(h => h.type==='fixed' ? h.days.includes(dayIdx) : true);
             habits.forEach(h => {
                 const l = logs[activeDate]?.[h.id] || { done: false, n: null, t: [], notes: '' };
@@ -261,12 +254,10 @@
                     }
                     flexCounter = `<span class="ml-2 text-[10px] text-zinc-500 font-black">${count}/${h.freq}</span>`;
                 }
-
                 let pills = '';
                 if(l.n !== null) pills += `<div class="pill">${l.n}${h.unit}</div>`;
                 if(l.t) l.t.forEach(t => pills += `<div class="pill">${t}</div>`);
-                if(l.notes) { const trunc = l.notes.length > 15 ? l.notes.substring(0, 12) + '...' : l.notes; pills += `<div class="note-preview-pill">📝 ${trunc}</div>`; }
-                
+                if(l.notes) pills += `<div class="note-preview-pill">📝</div>`;
                 feed.innerHTML += `<div class="habit-card ${h.nn ? 'nn-active' : ''}">${h.nn ? '<div class="nn-badge">NN</div>' : ''}<div class="flex-1 mr-4 overflow-hidden" onclick="openPicker('${h.id}')"><p class="font-bold text-sm uppercase truncate">${h.name}${flexCounter}</p></div><div class="action-zone">${(l.n!==null || l.t.length || l.notes) ? `<div class="pill-scroll" onclick="openPicker('${h.id}')">${pills}</div>` : ((h.useNum || h.useOpt || h.notes) ? `<div class="set-btn" onclick="openPicker('${h.id}')">SET</div>` : '')}<div class="check-box ${l.done ? 'active' : ''}" onclick="toggleCheck('${h.id}')">${l.done?'✓':''}</div></div></div>`;
             });
             syncHeader();
@@ -302,7 +293,7 @@
             document.getElementById('val-gone').innerText = allDates.length ? Math.ceil(Math.abs(new Date() - new Date(allDates[0]))/86400000) : 0;
         }
 
-        function setPeriod(p) { insightPeriod = p; document.querySelectorAll('.period-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.p == p)); renderInsights(); }
+        function setPeriod(p) { insightPeriod = p; renderInsights(); }
         function renderInsights() {
             const list = document.getElementById('insights-list'); list.innerHTML = '';
             let dateRange = []; const end = new Date(todayStr); let start = new Date(todayStr);
@@ -327,16 +318,16 @@
 
         function openBackup() { const data = { M: manifest, L: logs, C: config }; document.getElementById('backup-text').value = btoa(JSON.stringify(data)); document.getElementById('mod-backup').style.display = 'flex'; }
         function copyBackup() { const txt = document.getElementById('backup-text'); txt.select(); document.execCommand('copy'); alert('Copied'); }
-        function restoreBackup() { if(!confirm('Overwrite data?')) return; try { const decoded = JSON.parse(atob(document.getElementById('backup-text').value)); if(decoded.M && decoded.L && decoded.C) { localStorage.setItem('M_BREAD_V10', JSON.stringify(decoded.M)); localStorage.setItem('L_BREAD_V10', JSON.stringify(decoded.L)); localStorage.setItem('C_BREAD_V10', JSON.stringify(decoded.C)); window.location.reload(); } } catch(e) { alert('Error'); } }
+        function restoreBackup() { if(!confirm('Restore Data?')) return; try { const decoded = JSON.parse(atob(document.getElementById('backup-text').value)); if(decoded.M && decoded.L) { localStorage.setItem('M_BREAD_V10', JSON.stringify(decoded.M)); localStorage.setItem('L_BREAD_V10', JSON.stringify(decoded.L)); localStorage.setItem('C_BREAD_V10', JSON.stringify(decoded.C)); window.location.reload(); } } catch(e) { alert('Invalid'); } }
 
         function renderManifest() {
             const list = document.getElementById('manifest-list'); list.innerHTML = '';
             manifest.forEach((h, index) => {
                 const item = document.createElement('div');
-                item.className = 'p-4 bg-zinc-900 rounded-xl flex justify-between border border-zinc-800 items-center draggable-item';
-                item.draggable = true; item.dataset.index = index;
+                item.className = 'p-4 bg-zinc-900 rounded-xl flex justify-between border border-zinc-800 items-center';
+                item.draggable = true;
                 item.innerHTML = `<div class="flex items-center"><div class="drag-handle">≡</div><span class="font-black uppercase text-[10px] ml-2">${h.name}</span></div><div class="flex gap-4"><button onclick="loadEdit('${h.id}')" class="text-zinc-500 font-black text-[9px]">EDIT</button><button onclick="delH('${h.id}')" class="text-red-500 font-black text-[10px]">✕</button></div>`;
-                item.addEventListener('dragstart', (e) => { e.target.classList.add('dragging'); e.dataTransfer.setData('text/plain', index); });
+                item.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', index); });
                 item.addEventListener('drop', (e) => { e.preventDefault(); const from = e.dataTransfer.getData('text/plain'); const moved = manifest.splice(from, 1)[0]; manifest.splice(index, 0, moved); localStorage.setItem('M_BREAD_V10', JSON.stringify(manifest)); renderManifest(); });
                 item.addEventListener('dragover', (e) => e.preventDefault());
                 list.appendChild(item);
@@ -365,8 +356,8 @@
             }
             document.getElementById('mod-cal').style.display = 'flex';
         }
-        function loadEdit(id) { editId = id; const h = manifest.find(x => x.id === id); document.getElementById('h-name').value = h.name; setMode(h.type); document.querySelectorAll('.day-btn').forEach(b => b.classList.toggle('active', h.days.includes(parseInt(b.dataset.d)))); document.getElementById('h-freq').value = h.freq; document.getElementById('h-nn').checked = h.nn; document.getElementById('h-useNum').checked = h.useNum; document.getElementById('h-min').value = h.min; document.getElementById('h-max').value = h.max; document.getElementById('h-step').value = h.step || 1; document.getElementById('h-unit').value = h.unit; document.getElementById('h-useOpt').checked = h.useOpt; document.getElementById('h-tags').value = h.tags.join(', '); document.getElementById('h-multi').checked = h.multi; document.getElementById('h-notes').checked = h.notes; document.getElementById('forge-btn').innerText = "UPDATE"; document.getElementById('cancel-btn').classList.remove('hidden'); nav('build'); }
-        function resetBuilder() { editId = null; document.getElementById('form-wrap').querySelectorAll('input, textarea').forEach(el => el.type==='checkbox'?el.checked=false:el.value=''); document.getElementById('forge-btn').innerText="Forge Habit"; document.getElementById('cancel-btn').classList.add('hidden'); }
+        function loadEdit(id) { editId = id; const h = manifest.find(x => x.id === id); document.getElementById('h-name').value = h.name; setMode(h.type); document.getElementById('h-freq').value = h.freq; document.getElementById('h-nn').checked = h.nn; document.getElementById('h-useNum').checked = h.useNum; document.getElementById('h-min').value = h.min; document.getElementById('h-max').value = h.max; document.getElementById('h-unit').value = h.unit; document.getElementById('h-useOpt').checked = h.useOpt; document.getElementById('h-tags').value = h.tags.join(', '); document.getElementById('forge-btn').innerText = "UPDATE"; document.getElementById('cancel-btn').classList.remove('hidden'); nav('build'); }
+        function resetBuilder() { editId = null; document.getElementById('forge-btn').innerText="Forge Habit"; document.getElementById('cancel-btn').classList.add('hidden'); }
         function delH(id) { if(confirm('Delete?')) { manifest = manifest.filter(x => x.id !== id); localStorage.setItem('M_BREAD_V10', JSON.stringify(manifest)); renderManifest(); } }
         setQuote(); nav('track');
     </script>
