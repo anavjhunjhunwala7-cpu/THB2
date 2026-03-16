@@ -21,7 +21,6 @@
             100% { box-shadow: 0 0 0px var(--neon); transform: scale(1); }
         }
         .glow-active { animation: glow 0.6s ease-out; border-color: var(--neon) !important; }
-        .conquer-glow { animation: glow 0.8s ease-in-out; border-color: var(--neon) !important; }
 
         .habit-card { background: var(--panel); border: 1px solid var(--border); border-radius: 1.25rem; margin-bottom: 10px; display: flex; align-items: center; padding: 16px; position: relative; min-height: 85px; justify-content: space-between; }
         .nn-active { border-left: 4px solid var(--nn); }
@@ -175,7 +174,6 @@
         const quotes = ["DISCIPLINE OR REGRET", "WIN THE DAY", "KILL THE EXCUSE", "OWN YOUR LIFE", "DO THE WORK", "STAY HARD"];
         function setQuote() { document.getElementById('daily-quote').innerText = quotes[Math.floor(Math.random() * quotes.length)]; }
 
-        // Initialize Config Inputs
         document.getElementById('c-goal').value = config.goal;
         document.getElementById('c-pass').value = config.pass;
 
@@ -247,7 +245,6 @@
             return { score, pass: (nnDone && score >= config.pass) };
         }
 
-        let lastConqueredCount = -1;
         function syncHeader() {
             const d = new Date(activeDate);
             document.getElementById('head-date').innerText = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
@@ -257,19 +254,21 @@
             const scoreVal = document.getElementById('val-score');
             const scoreCirc = document.getElementById('score-circle');
             scoreVal.innerText = s.score + '%';
-            scoreCirc.style.borderColor = s.score >= config.pass ? 'var(--neon)' : '#222';
+            
+            // Fixed traffic light logic
+            if (s.score >= config.pass) { 
+                scoreVal.style.color = 'var(--neon)'; 
+                scoreCirc.style.borderColor = 'var(--neon)'; 
+            } else if (s.score >= (config.pass * 0.7)) { 
+                scoreVal.style.color = 'var(--reset)'; 
+                scoreCirc.style.borderColor = 'var(--reset)'; 
+            } else { 
+                scoreVal.style.color = 'var(--nn)'; 
+                scoreCirc.style.borderColor = 'var(--nn)'; 
+            }
             
             let conquered = 0; Object.keys(logs).forEach(date => { if(getDailyStatus(date).pass) conquered++; });
             document.getElementById('val-conquer').innerText = `${conquered}/${config.goal}`;
-            
-            // Celebration Glow for Conquer
-            if (lastConqueredCount !== -1 && conquered > lastConqueredCount) {
-                const conqBox = document.getElementById('conquer-circle');
-                conqBox.classList.add('conquer-glow');
-                setTimeout(() => conqBox.classList.remove('conquer-glow'), 800);
-            }
-            lastConqueredCount = conquered;
-
             const allDates = Object.keys(logs).sort();
             document.getElementById('val-gone').innerText = allDates.length ? Math.ceil(Math.abs(new Date() - new Date(allDates[0]))/86400000) : 0;
         }
@@ -298,8 +297,15 @@
         function closeM(m) { document.getElementById(m).style.display = 'none'; renderTrack(); }
         
         function openCalendar() {
-            const g = document.getElementById('cal-grid'); g.innerHTML = ''; const now = new Date(activeDate);
-            const startDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay(); const offset = startDay === 0 ? 6 : startDay - 1;
+            const g = document.getElementById('cal-grid'); g.innerHTML = ''; 
+            const now = new Date(activeDate);
+            
+            // FIXED: Populate Calendar Modal Header
+            document.getElementById('cal-head-day').innerText = now.toLocaleDateString('en-GB', { weekday: 'long' });
+            document.getElementById('cal-head-date').innerText = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+
+            const startDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay(); 
+            const offset = startDay === 0 ? 6 : startDay - 1;
             const last = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
             for(let i=0; i<offset; i++) g.innerHTML += `<div></div>`;
             for(let d=1; d<=last; d++) {
