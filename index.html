@@ -76,7 +76,7 @@
 
     <div id="view-build" class="hidden p-6 pb-32">
         <div class="mb-8 p-4 bg-zinc-900 rounded-2xl border border-zinc-800">
-            <h2 class="u-title text-white mb-4">Campaign Command</h2>
+            <h2 class="u-title text-white mb-4 text-center">Campaign Command</h2>
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
                     <label class="text-[8px] font-black text-zinc-500 uppercase">Goal Days</label>
@@ -89,12 +89,12 @@
             </div>
         </div>
 
-        <h2 class="text-xl font-black uppercase italic mb-6">Constructor</h2>
+        <h2 class="text-xl font-black uppercase italic mb-6 text-center">Constructor</h2>
         <div class="space-y-4" id="form-wrap">
             <input type="text" id="h-name" placeholder="HABIT NAME" class="input-dark font-black">
             <div class="flex bg-zinc-900 p-1 rounded-xl">
                 <button id="mode-fixed" class="flex-1 py-3 text-[9px] font-black rounded-lg bg-zinc-800" onclick="setMode('fixed')">FIXED</button>
-                <button id="mode-flex" class="flex-1 py-3 text-[9px] font-black text-zinc-500" onclick="setMode('flex')">FLEXIBLE</button>
+                <button id="mode-flex" class="flex-1 py-3 text-[9px] font-black text-zinc-500 rounded-lg" onclick="setMode('flex')">FLEXIBLE</button>
             </div>
             <div id="days-row" class="grid grid-cols-7 gap-1">
                 <button class="day-btn active" data-d="1">M</button><button class="day-btn active" data-d="2">T</button><button class="day-btn active" data-d="3">W</button>
@@ -102,11 +102,11 @@
                 <button class="day-btn active" data-d="0">S</button>
             </div>
             <div id="flex-row" class="hidden"><input type="number" id="h-freq" placeholder="Times/Week" class="input-dark"></div>
-            <div class="flex justify-between p-4 bg-zinc-900 rounded-xl"><span class="u-title text-white">Non-Negotiable</span><input type="checkbox" id="h-nn" class="w-5 h-5 accent-green-500"></div>
+            <div class="flex justify-between items-center p-4 bg-zinc-900 rounded-xl"><span class="u-title text-white">Non-Negotiable</span><input type="checkbox" id="h-nn" class="w-5 h-5 accent-green-500"></div>
             
             <div class="grid grid-cols-2 gap-3">
                 <div class="p-3 bg-zinc-900 rounded-xl space-y-2">
-                    <div class="flex justify-between items-center"><span class="u-title">Numeric</span><input type="checkbox" id="h-useNum" class="w-5 h-5 accent-green-500"></div>
+                    <div class="flex justify-between items-center"><span class="u-title text-white">Numeric</span><input type="checkbox" id="h-useNum" class="w-5 h-5 accent-green-500"></div>
                     <div class="grid grid-cols-2 gap-1">
                         <input type="number" id="h-min" placeholder="Min" class="input-dark text-[10px] p-2">
                         <input type="number" id="h-max" placeholder="Max" class="input-dark text-[10px] p-2">
@@ -115,7 +115,7 @@
                     </div>
                 </div>
                 <div class="p-3 bg-zinc-900 rounded-xl space-y-2">
-                    <div class="flex justify-between items-center"><span class="u-title">Tags</span><input type="checkbox" id="h-useOpt" class="w-5 h-5 accent-green-500"></div>
+                    <div class="flex justify-between items-center"><span class="u-title text-white">Tags</span><input type="checkbox" id="h-useOpt" class="w-5 h-5 accent-green-500"></div>
                     <textarea id="h-tags" placeholder="Tag 1, Tag 2..." class="input-dark text-xs h-20"></textarea>
                 </div>
             </div>
@@ -239,14 +239,12 @@
             const di = new Date(ds).getDay();
             const habits = manifest.filter(h => h.type==='fixed' ? h.days.includes(di) : true);
             if(!habits.length) return { score: 100, pass: true, count: 0 };
-            
-            let done = 0, nnDone = true, nnCount = 0;
+            let done = 0, nnDone = true;
             habits.forEach(h => {
                 const l = logs[ds]?.[h.id];
                 if(l?.done) done++;
-                if(h.nn) { nnCount++; if(!l?.done) nnDone = false; }
+                if(h.nn && !l?.done) nnDone = false;
             });
-            
             const score = Math.round((done / habits.length) * 100);
             const pass = nnDone && score >= config.pass;
             return { score, pass, count: habits.length };
@@ -257,23 +255,16 @@
             document.getElementById('head-date').innerText = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
             document.getElementById('head-day').innerText = d.toLocaleDateString('en-GB', { weekday: 'long' });
             document.getElementById('next-day-btn').classList.toggle('active', activeDate < todayStr);
-            
             const s = getDailyStatus(activeDate);
             document.getElementById('val-score').innerText = s.score + '%';
-            
             let conquered = 0;
             Object.keys(logs).forEach(date => { if(getDailyStatus(date).pass) conquered++; });
             document.getElementById('val-conquer').innerText = `${conquered}/${config.goal}`;
-            
             const allDates = Object.keys(logs).sort();
             document.getElementById('val-gone').innerText = allDates.length ? Math.ceil(Math.abs(new Date() - new Date(allDates[0]))/86400000) : 0;
         }
 
-        function updateAndLock() {
-            localStorage.setItem('L_BREAD_V9', JSON.stringify(logs));
-            renderTrack();
-        }
-
+        function updateAndLock() { localStorage.setItem('L_BREAD_V9', JSON.stringify(logs)); renderTrack(); }
         function openPicker(id) { curHId = id; const h = manifest.find(x => x.id === id); ensureL(id); const l = logs[activeDate][id]; document.getElementById('pick-title').innerText = h.name; renderPickerOptions(); const nBox = document.getElementById('notes-container'); const nInput = document.getElementById('pick-notes'); if(h.notes) { nBox.classList.remove('hidden'); nInput.value = l.notes || ''; nInput.oninput = (e) => { logs[activeDate][curHId].notes = e.target.value; }; } else { nBox.classList.add('hidden'); } document.getElementById('mod-pick').style.display = 'flex'; }
         function renderPickerOptions() { const h = manifest.find(x => x.id === curHId); const l = logs[activeDate][curHId]; const cont = document.getElementById('pick-options'); cont.innerHTML = ''; if(h.useNum) { for(let i=h.min; i<=h.max; i+=h.step) { cont.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl border ${l.n == i ? 'border-green-500 text-green-500' : 'border-zinc-800'} text-center font-bold" onclick="setN(${i})">${i}</div>`; } } if(h.useOpt) { h.tags.forEach(t => { cont.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl border ${l.t.includes(t) ? 'border-green-500 text-green-500' : 'border-zinc-800'} text-center font-bold" onclick="setT('${t}')">${t}</div>`; }); } }
         function setN(v) { logs[activeDate][curHId].n = v; logs[activeDate][curHId].done = true; renderPickerOptions(); }
