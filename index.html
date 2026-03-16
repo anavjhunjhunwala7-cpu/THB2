@@ -11,13 +11,19 @@
         .hidden { display: none !important; }
         .fixed-header { position: fixed; top: 0; width: 100%; height: 210px; background: var(--bg); border-bottom: 1px solid var(--border); z-index: 100; padding: 10px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
         .content-area { margin-top: 220px; margin-bottom: 120px; padding: 15px; }
+        
+        /* Colored Stat Outlines */
         .stat-circle { width: 70px; height: 70px; border-radius: 50%; border: 2px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0a0a0a; transition: all 0.3s ease; position: relative; }
+        #score-circle { border-color: var(--neon); }
+        #conquer-circle { border-color: var(--reset); }
+        #days-circle { border-color: #555; }
+
         .stat-val { font-size: 13px; font-weight: 900; transition: color 0.3s ease; }
         .stat-lab { font-size: 7px; font-weight: 900; color: #444; text-transform: uppercase; margin-top: 1px; }
         
-        @keyframes pulse-green { 0% { box-shadow: 0 0 0px transparent; border-color: #222; } 50% { box-shadow: 0 0 20px var(--neon); border-color: var(--neon); } 100% { box-shadow: 0 0 0px transparent; border-color: #222; } }
-        @keyframes pulse-orange { 0% { box-shadow: 0 0 0px transparent; border-color: #222; } 50% { box-shadow: 0 0 20px var(--reset); border-color: var(--reset); } 100% { box-shadow: 0 0 0px transparent; border-color: #222; } }
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0px transparent; border-color: #222; } 50% { box-shadow: 0 0 20px var(--nn); border-color: var(--nn); } 100% { box-shadow: 0 0 0px transparent; border-color: #222; } }
+        @keyframes pulse-green { 0% { box-shadow: 0 0 0px transparent; } 50% { box-shadow: 0 0 20px var(--neon); } 100% { box-shadow: 0 0 0px transparent; } }
+        @keyframes pulse-orange { 0% { box-shadow: 0 0 0px transparent; } 50% { box-shadow: 0 0 20px var(--reset); } 100% { box-shadow: 0 0 0px transparent; } }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0px transparent; } 50% { box-shadow: 0 0 20px var(--nn); } 100% { box-shadow: 0 0 0px transparent; } }
         
         .glow-win { animation: pulse-green 1.2s ease-out; }
         .glow-warn { animation: pulse-orange 1.2s ease-out; }
@@ -29,7 +35,10 @@
         .action-zone { display: flex; align-items: center; gap: 8px; }
         .pill-scroll { display: flex; overflow-x: auto; gap: 4px; scrollbar-width: none; max-width: 140px; align-items: center; }
         .pill { background: rgba(34,197,94,0.1); border: 1px solid var(--neon); color: var(--neon); padding: 4px 8px; border-radius: 6px; font-size: 9px; font-weight: 800; white-space: nowrap; }
-        .note-preview-pill { background: rgba(249,115,22,0.1); border: 1px solid var(--reset); color: var(--reset); padding: 4px 8px; border-radius: 6px; font-size: 9px; font-weight: 700; white-space: nowrap; max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
+        
+        /* Note Preview Styling */
+        .note-preview-pill { background: rgba(249,115,22,0.1); border: 1px solid var(--reset); color: var(--reset); padding: 4px 8px; border-radius: 6px; font-size: 9px; font-weight: 700; white-space: nowrap; max-width: 100px; overflow: hidden; text-overflow: ellipsis; font-style: italic; }
+        
         .set-btn { font-size: 10px; font-weight: 900; color: var(--neon); padding: 8px 14px; border: 1px dashed var(--neon); border-radius: 8px; }
         .check-box { width: 44px; height: 44px; border: 2px solid #333; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .check-box.active { background: var(--neon); border-color: var(--neon); color: #000; }
@@ -205,21 +214,9 @@
         function setInsightRange(val) {
             const pills = document.querySelectorAll('.p-pill');
             pills.forEach(p => p.classList.remove('active'));
-            
-            if (val === 'MAX') {
-                insightDays = 0;
-                pills[0].classList.add('active');
-                document.getElementById('custom-days').value = '';
-            } else if (val === 'CUSTOM') {
-                insightDays = parseInt(document.getElementById('custom-days').value) || 0;
-            } else {
-                insightDays = val;
-                // Highlight the correct pill
-                const labels = ['MAX',7,14,21,28,60,90,180];
-                const idx = labels.indexOf(val);
-                if(idx !== -1) pills[idx].classList.add('active');
-                document.getElementById('custom-days').value = val;
-            }
+            if (val === 'MAX') { insightDays = 0; pills[0].classList.add('active'); document.getElementById('custom-days').value = ''; } 
+            else if (val === 'CUSTOM') { insightDays = parseInt(document.getElementById('custom-days').value) || 0; } 
+            else { insightDays = val; const labels = ['MAX',7,14,21,28,60,90,180]; const idx = labels.indexOf(val); if(idx !== -1) pills[idx].classList.add('active'); document.getElementById('custom-days').value = val; }
             renderInsights();
         }
 
@@ -238,87 +235,55 @@
                     if (l?.done && l.n !== null) { sumNum += l.n; countNum++; }
                     if (l?.done && l.t) l.t.forEach(tag => tagCounts[tag] = (tagCounts[tag] || 0) + 1);
                 });
-
                 let rate = 0, targetStr = '';
                 if (h.type === 'fixed') { rate = scheduled ? Math.round((hits/scheduled)*100) : 0; targetStr = `${h.days.length}/7`; } 
-                else {
-                    const wks = insightDays === 0 ? Math.max(1, Math.ceil(Object.keys(logs).length / 7)) : Math.ceil(insightDays / 7);
-                    rate = Math.min(100, Math.round((hits / (h.freq * wks)) * 100)); targetStr = `${h.freq}/7`;
-                }
-
-                // Smart Decimal Logic
-                let avgDisp = 0;
-                if(countNum) {
-                    const rawAvg = sumNum / countNum;
-                    const isDecimalStep = (h.step % 1 !== 0);
-                    avgDisp = isDecimalStep ? rawAvg.toFixed(1) : Math.round(rawAvg);
-                }
-
-                let cardHTML = `<div class="p-5 bg-zinc-900 border border-zinc-800 rounded-3xl">
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="u-title text-white font-black">${h.name} <span class="text-zinc-600 ml-1">(${targetStr})</span></span>
-                        <span class="text-green-500 font-black text-xs">${rate}%</span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">`;
-                if (h.useNum) cardHTML += `<div class="bg-black p-4 rounded-2xl text-center col-span-2"><p class="u-title text-[7px] mb-1">Average</p><p class="text-xl font-black">${avgDisp}${h.unit}</p></div>`;
+                else { const wks = insightDays === 0 ? Math.max(1, Math.ceil(Object.keys(logs).length / 7)) : Math.ceil(insightDays / 7); rate = Math.min(100, Math.round((hits / (h.freq * wks)) * 100)); targetStr = `${h.freq}/7`; }
+                let avgDisp = 0; if(countNum) { const rawAvg = sumNum / countNum; const isDecimalStep = (h.step % 1 !== 0); avgDisp = isDecimalStep ? rawAvg.toFixed(1) : Math.round(rawAvg); }
+                let cardHTML = `<div class="p-5 bg-zinc-900 border border-zinc-800 rounded-3xl"><div class="flex justify-between items-center mb-4"><span class="u-title text-white font-black">${h.name} <span class="text-zinc-600 ml-1">(${targetStr})</span></span><span class="text-green-500 font-black text-xs">${rate}%</span></div><div class="grid grid-cols-2 gap-2">`;
+                // Logic Change: Space between Average and Unit
+                if (h.useNum) cardHTML += `<div class="bg-black p-4 rounded-2xl text-center col-span-2"><p class="u-title text-[7px] mb-1">Average</p><p class="text-xl font-black">${avgDisp} ${h.unit}</p></div>`;
                 else cardHTML += `<div class="bg-black p-4 rounded-2xl text-center col-span-2"><p class="u-title text-[7px] mb-1">Total Hits</p><p class="text-xl font-black">${hits}</p></div>`;
                 cardHTML += `</div>`;
-                if (Object.keys(tagCounts).length > 0) {
-                    cardHTML += `<div class="flex flex-wrap gap-2 mt-4">`;
-                    for (const [tag, count] of Object.entries(tagCounts)) cardHTML += `<div class="tag-tally">${tag}: <span class="text-green-500">${count}</span></div>`;
-                    cardHTML += `</div>`;
-                }
-                cardHTML += `</div>`;
-                list.innerHTML += cardHTML;
+                if (Object.keys(tagCounts).length > 0) { cardHTML += `<div class="flex flex-wrap gap-2 mt-4">`; for (const [tag, count] of Object.entries(tagCounts)) cardHTML += `<div class="tag-tally">${tag}: <span class="text-green-500">${count}</span></div>`; cardHTML += `</div>`; }
+                cardHTML += `</div>`; list.innerHTML += cardHTML;
             });
         }
 
-        // --- CORE V10 LOGIC (UNCHANGED) ---
-        function getDailyStatus(ds) {
-            const di = new Date(ds).getDay();
-            const habits = manifest.filter(h => h.type==='fixed' ? h.days.includes(di) : true);
-            if(!habits.length) return { score: 100, pass: true };
-            let done = 0, nnDone = true;
-            habits.forEach(h => { const l = logs[ds]?.[h.id]; if(l?.done) done++; if(h.nn && !l?.done) nnDone = false; });
-            const score = Math.round((done / habits.length) * 100);
-            return { score, pass: (nnDone && score >= config.pass) };
-        }
-        function triggerSelectiveGlow(oldPass) {
-            const s = getDailyStatus(activeDate);
-            const scoreCirc = document.getElementById('score-circle');
-            const conqCirc = document.getElementById('conquer-circle');
-            scoreCirc.classList.remove('glow-win', 'glow-warn', 'glow-fail');
-            void scoreCirc.offsetWidth;
-            if(s.score >= config.pass) scoreCirc.classList.add('glow-win');
-            else if(s.score >= (config.pass * 0.7)) scoreCirc.classList.add('glow-warn');
-            else scoreCirc.classList.add('glow-fail');
-            if (!oldPass && s.pass) { conqCirc.classList.remove('glow-win'); void conqCirc.offsetWidth; conqCirc.classList.add('glow-win'); }
-        }
-        function nav(v) {
-            ['view-track', 'view-build', 'view-insights'].forEach(id => document.getElementById(id).classList.add('hidden'));
-            document.getElementById('view-' + v).classList.remove('hidden');
-            ['n-track', 'n-build', 'n-insights'].forEach(id => document.getElementById(id).classList.remove('active'));
-            document.getElementById('n-' + v).classList.add('active');
-            if(v==='build') renderManifest(); else if(v==='insights') renderInsights(); else renderTrack();
-        }
+        // --- CORE TRACK LOGIC ---
         function renderTrack() {
             const feed = document.getElementById('habit-feed'); feed.innerHTML = '';
             const habits = manifest.filter(h => h.type==='fixed' ? h.days.includes(new Date(activeDate).getDay()) : true);
             habits.forEach(h => {
                 const l = logs[activeDate]?.[h.id] || { done: false, n: null, t: [], notes: '' };
-                let ps = ''; if(l.n !== null) ps += `<div class="pill">${l.n}${h.unit}</div>`; if(l.t) l.t.forEach(t => ps += `<div class="pill">${t}</div>`); if(l.notes) ps += `<div class="note-preview-pill">📝</div>`;
+                let ps = ''; 
+                if(l.n !== null) ps += `<div class="pill">${l.n} ${h.unit}</div>`; 
+                if(l.t) l.t.forEach(t => ps += `<div class="pill">${t}</div>`); 
+                // Logic Change: Note Preview instead of Emoji
+                if(l.notes) ps += `<div class="note-preview-pill">${l.notes}</div>`;
                 feed.innerHTML += `<div class="habit-card ${h.nn ? 'nn-active' : ''}">${h.nn ? '<div class="nn-badge">NN</div>' : ''}<div class="flex-1 mr-4 overflow-hidden" onclick="openPicker('${h.id}')"><p class="font-bold text-sm uppercase truncate">${h.name}</p></div><div class="action-zone">${ps ? `<div class="pill-scroll" onclick="openPicker('${h.id}')">${ps}</div>` : ((h.useNum || h.useOpt || h.notes) ? `<div class="set-btn" onclick="openPicker('${h.id}')">SET</div>` : '')}<div class="check-box ${l.done ? 'active' : ''}" onclick="toggleCheck('${h.id}')">${l.done?'✓':''}</div></div></div>`;
             });
             syncHeader();
         }
-        function syncHeader() {
-            const d = new Date(activeDate); document.getElementById('head-date').innerText = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }); document.getElementById('head-day').innerText = d.toLocaleDateString('en-GB', { weekday: 'long' });
-            const s = getDailyStatus(activeDate); const sv = document.getElementById('val-score'); sv.innerText = s.score + '%';
-            sv.style.color = s.score >= config.pass ? 'var(--neon)' : (s.score >= config.pass * 0.7 ? 'var(--reset)' : 'var(--nn)');
-            let conq = 0; Object.keys(logs).forEach(date => { if(getDailyStatus(date).pass) conq++; }); document.getElementById('val-conquer').innerText = `${conq}/${config.goal}`;
-            const ad = Object.keys(logs).sort(); document.getElementById('val-gone').innerText = ad.length ? Math.ceil(Math.abs(new Date() - new Date(ad[0]))/86400000) : 0;
-            document.getElementById('c-goal').value = config.goal; document.getElementById('c-pass').value = config.pass;
+
+        function updateAndLock() { 
+            localStorage.setItem('L_BREAD_V10', JSON.stringify(logs)); 
+            const btn = document.getElementById('update-btn');
+            const originalText = btn.innerText;
+            // Logic Change: Pulsing Feedback on Sync
+            btn.innerText = "SYNCED ✓";
+            btn.classList.add('glow-win');
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.remove('glow-win');
+            }, 1000);
+            renderTrack(); 
         }
+
+        // --- REST OF CORE (UNCHANGED) ---
+        function getDailyStatus(ds) { const di = new Date(ds).getDay(); const habits = manifest.filter(h => h.type==='fixed' ? h.days.includes(di) : true); if(!habits.length) return { score: 100, pass: true }; let done = 0, nnDone = true; habits.forEach(h => { const l = logs[ds]?.[h.id]; if(l?.done) done++; if(h.nn && !l?.done) nnDone = false; }); const score = Math.round((done / habits.length) * 100); return { score, pass: (nnDone && score >= config.pass) }; }
+        function triggerSelectiveGlow(oldPass) { const s = getDailyStatus(activeDate); const scoreCirc = document.getElementById('score-circle'); const conqCirc = document.getElementById('conquer-circle'); scoreCirc.classList.remove('glow-win', 'glow-warn', 'glow-fail'); void scoreCirc.offsetWidth; if(s.score >= config.pass) scoreCirc.classList.add('glow-win'); else if(s.score >= (config.pass * 0.7)) scoreCirc.classList.add('glow-warn'); else scoreCirc.classList.add('glow-fail'); if (!oldPass && s.pass) { conqCirc.classList.remove('glow-win'); void conqCirc.offsetWidth; conqCirc.classList.add('glow-win'); } }
+        function nav(v) { ['view-track', 'view-build', 'view-insights'].forEach(id => document.getElementById(id).classList.add('hidden')); document.getElementById('view-' + v).classList.remove('hidden'); ['n-track', 'n-build', 'n-insights'].forEach(id => document.getElementById(id).classList.remove('active')); document.getElementById('n-' + v).classList.add('active'); if(v==='build') renderManifest(); else if(v==='insights') renderInsights(); else renderTrack(); }
+        function syncHeader() { const d = new Date(activeDate); document.getElementById('head-date').innerText = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }); document.getElementById('head-day').innerText = d.toLocaleDateString('en-GB', { weekday: 'long' }); const s = getDailyStatus(activeDate); const sv = document.getElementById('val-score'); sv.innerText = s.score + '%'; sv.style.color = s.score >= config.pass ? 'var(--neon)' : (s.score >= config.pass * 0.7 ? 'var(--reset)' : 'var(--nn)'); let conq = 0; Object.keys(logs).forEach(date => { if(getDailyStatus(date).pass) conq++; }); document.getElementById('val-conquer').innerText = `${conq}/${config.goal}`; const ad = Object.keys(logs).sort(); document.getElementById('val-gone').innerText = ad.length ? Math.ceil(Math.abs(new Date() - new Date(ad[0]))/86400000) : 0; document.getElementById('c-goal').value = config.goal; document.getElementById('c-pass').value = config.pass; }
         function toggleCheck(id) { const old = getDailyStatus(activeDate).pass; if(!logs[activeDate]) logs[activeDate] = {}; if(!logs[activeDate][id]) logs[activeDate][id] = { done: false, n: null, t: [], notes: '' }; logs[activeDate][id].done = !logs[activeDate][id].done; renderTrack(); triggerSelectiveGlow(old); }
         function saveConfig() { config.goal = parseInt(document.getElementById('c-goal').value) || 75; config.pass = parseInt(document.getElementById('c-pass').value) || 100; localStorage.setItem('C_BREAD_V10', JSON.stringify(config)); renderTrack(); }
         function setMode(m) { buildMode = m; document.getElementById('mode-fixed').classList.toggle('bg-zinc-800', m==='fixed'); document.getElementById('mode-flex').classList.toggle('bg-zinc-800', m==='flex'); document.getElementById('days-row').classList.toggle('hidden', m==='flex'); document.getElementById('flex-row').classList.toggle('hidden', m==='fixed'); }
@@ -332,7 +297,6 @@
         function clearEntry() { logs[activeDate][curHId] = { done: false, n: null, t: [], notes: '' }; openPicker(curHId); }
         function closeM(m) { document.getElementById(m).style.display = 'none'; renderTrack(); }
         function openCalendar() { const g = document.getElementById('cal-grid'); g.innerHTML = ''; const now = new Date(activeDate); document.getElementById('cal-head-day').innerText = now.toLocaleDateString('en-GB', { weekday: 'long' }); document.getElementById('cal-head-date').innerText = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }); const start = new Date(now.getFullYear(), now.getMonth(), 1).getDay(); const off = start === 0 ? 6 : start - 1; const last = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(); for(let i=0; i<off; i++) g.innerHTML += `<div></div>`; for(let d=1; d<=last; d++) { const ds = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; const r = getDailyStatus(ds); g.innerHTML += `<div class="cal-day-cell ${logs[ds] ? (r.pass ? 'cal-win' : 'cal-loss') : ''} ${ds === todayStr ? 'ring-2 ring-white' : ''}" onclick="activeDate='${ds}'; closeM('mod-cal');">${d}${logs[ds] ? `<span class="cal-perc">${r.score}%</span>` : ''}</div>`; } document.getElementById('mod-cal').style.display = 'flex'; }
-        function updateAndLock() { localStorage.setItem('L_BREAD_V10', JSON.stringify(logs)); renderTrack(); }
         function resetBuilder() { editId = null; document.getElementById('h-name').value = ''; document.getElementById('h-freq').value = ''; document.getElementById('h-nn').checked = false; document.getElementById('h-useNum').checked = false; document.getElementById('h-min').value = ''; document.getElementById('h-max').value = ''; document.getElementById('h-step').value = ''; document.getElementById('h-unit').value = ''; document.getElementById('h-useOpt').checked = false; document.getElementById('h-tags').value = ''; document.getElementById('h-multi').checked = false; document.getElementById('h-notes').checked = false; document.querySelectorAll('.day-btn').forEach(btn => btn.classList.add('active')); document.getElementById('forge-btn').innerText="Forge Habit"; document.getElementById('cancel-btn').classList.add('hidden'); }
         function saveHabit() { const h = { id: editId || 'h' + Date.now(), name: document.getElementById('h-name').value, type: buildMode, days: Array.from(document.querySelectorAll('.day-btn.active')).map(b => parseInt(b.dataset.d)), freq: parseInt(document.getElementById('h-freq').value || 0), nn: document.getElementById('h-nn').checked, useNum: document.getElementById('h-useNum').checked, min: parseFloat(document.getElementById('h-min').value || 0), max: parseFloat(document.getElementById('h-max').value || 0), step: parseFloat(document.getElementById('h-step').value || 1), unit: document.getElementById('h-unit').value, useOpt: document.getElementById('h-useOpt').checked, tags: document.getElementById('h-tags').value.split(',').map(t => t.trim()).filter(t => t), multi: document.getElementById('h-multi').checked, notes: document.getElementById('h-notes').checked }; if(!h.name) return; editId ? manifest[manifest.findIndex(x => x.id === editId)] = h : manifest.push(h); localStorage.setItem('M_BREAD_V10', JSON.stringify(manifest)); resetBuilder(); renderManifest(); }
         function renderManifest() { const list = document.getElementById('manifest-list'); list.innerHTML = ''; manifest.forEach((h) => { list.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl flex justify-between border border-zinc-800 items-center" data-id="${h.id}"><div class="flex items-center"><span class="drag-handle">☰</span><span class="font-black uppercase text-[10px]">${h.name}</span></div><div class="flex gap-4"><button onclick="loadEdit('${h.id}')" class="text-zinc-500 font-black text-[9px]">EDIT</button><button onclick="delH('${h.id}')" class="text-red-500 font-black text-[10px]">✕</button></div></div>`; }); new Sortable(list, { handle: '.drag-handle', animation: 150, onEnd: () => { const ids = Array.from(list.children).map(el => el.dataset.id); manifest.sort((a,b) => ids.indexOf(a.id) - ids.indexOf(b.id)); localStorage.setItem('M_BREAD_V10', JSON.stringify(manifest)); }}); }
