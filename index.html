@@ -6,7 +6,7 @@
     <title>THE HABIT BUILDER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --neon: #22c55e; --bg: #000000; --panel: #111111; --border: #222222; --nn: #ef4444; }
+        :root { --neon: #22c55e; --bg: #000000; --panel: #111111; --border: #222222; --nn: #ef4444; --reset: #f97316; }
         body { background: var(--bg); color: #fff; font-family: -apple-system, system-ui, sans-serif; margin: 0; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
         
         .fixed-header { position: fixed; top: 0; width: 100%; height: 260px; background: var(--bg); border-bottom: 1px solid var(--border); z-index: 100; padding: 20px; display: flex; flex-direction: column; align-items: center; }
@@ -17,19 +17,13 @@
         .stat-val { font-size: 16px; font-weight: 900; }
         .stat-lab { font-size: 8px; font-weight: 900; color: #444; text-transform: uppercase; margin-top: 2px; }
 
-        /* HABIT CARD: HORIZONTAL LOCK */
-        .habit-card { 
-            background: var(--panel); border: 1px solid var(--border); border-radius: 1.25rem; 
-            margin-bottom: 10px; display: flex; align-items: center; padding: 16px; 
-            position: relative; min-height: 85px; justify-content: space-between;
-        }
+        /* HABIT CARD */
+        .habit-card { background: var(--panel); border: 1px solid var(--border); border-radius: 1.25rem; margin-bottom: 10px; display: flex; align-items: center; padding: 16px; position: relative; min-height: 85px; justify-content: space-between; }
         .nn-badge { position: absolute; left: 0; top: 0; background: var(--nn); color: white; font-size: 7px; font-weight: 900; padding: 2px 5px; border-bottom-right-radius: 6px; }
-        
         .action-zone { display: flex; align-items: center; gap: 8px; }
         .pill-scroll { display: flex; overflow-x: auto; gap: 4px; scrollbar-width: none; max-width: 130px; }
         .pill-scroll::-webkit-scrollbar { display: none; }
         .pill { background: rgba(34,197,94,0.1); border: 1px solid var(--neon); color: var(--neon); padding: 4px 8px; border-radius: 6px; font-size: 9px; font-weight: 800; white-space: nowrap; }
-        
         .set-btn { font-size: 10px; font-weight: 900; color: var(--neon); padding: 8px 14px; border: 1px dashed var(--neon); border-radius: 8px; }
         .check-box { width: 44px; height: 44px; border: 2px solid #333; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .check-box.active { background: var(--neon); border-color: var(--neon); color: #000; }
@@ -85,21 +79,23 @@
             </div>
             <div id="flex-row" class="hidden"><input type="number" id="h-freq" placeholder="Times/Week" class="input-dark"></div>
             <div class="flex justify-between p-4 bg-zinc-900 rounded-xl"><span class="u-title text-white">Non-Negotiable</span><input type="checkbox" id="h-nn" class="chk-custom"></div>
+            
             <div class="grid grid-cols-2 gap-3">
                 <div class="p-3 bg-zinc-900 rounded-xl space-y-2">
                     <div class="flex justify-between items-center"><span class="u-title">Numeric</span><input type="checkbox" id="h-useNum" class="chk-custom"></div>
-                    <div class="grid grid-cols-3 gap-1">
+                    <div class="grid grid-cols-2 gap-1">
                         <input type="number" id="h-min" placeholder="Min" class="input-dark text-[10px] p-2">
                         <input type="number" id="h-max" placeholder="Max" class="input-dark text-[10px] p-2">
                         <input type="number" id="h-step" placeholder="Step" class="input-dark text-[10px] p-2">
+                        <input type="text" id="h-unit" placeholder="Unit" class="input-dark text-[10px] p-2">
                     </div>
-                    <input type="text" id="h-unit" placeholder="Unit" class="input-dark text-xs">
                 </div>
                 <div class="p-3 bg-zinc-900 rounded-xl space-y-2">
                     <div class="flex justify-between items-center"><span class="u-title">Tags</span><input type="checkbox" id="h-useOpt" class="chk-custom"></div>
                     <textarea id="h-tags" placeholder="Option 1, Option 2..." class="input-dark text-xs h-20"></textarea>
                 </div>
             </div>
+
             <div class="flex gap-4 p-4 bg-zinc-900 rounded-xl">
                 <label class="flex items-center gap-2 u-title text-white">Multi <input type="checkbox" id="h-multi" class="chk-custom"></label>
                 <label class="flex items-center gap-2 u-title text-white">Notes <input type="checkbox" id="h-notes" class="chk-custom"></label>
@@ -117,7 +113,11 @@
     </div>
 
     <div id="mod-pick" class="modal">
-        <div class="flex justify-between items-center mb-6"><button onclick="closeM('mod-pick')">✕</button><h3 id="pick-title" class="u-title text-white">LOG</h3><button onclick="closeM('mod-pick')" class="text-green-500 font-black">DONE</button></div>
+        <div class="flex justify-between items-center mb-6">
+            <button onclick="clearEntry()" class="text-orange-500 text-2xl font-black">↻</button>
+            <h3 id="pick-title" class="u-title text-white">LOG</h3>
+            <button onclick="closeM('mod-pick')" class="text-green-500 text-2xl font-black">✓</button>
+        </div>
         <div id="pick-options" class="grid grid-cols-2 gap-3 overflow-y-auto"></div>
         <textarea id="pick-notes" class="input-dark mt-4 hidden" placeholder="Session notes..."></textarea>
     </div>
@@ -128,8 +128,8 @@
     </nav>
 
     <script>
-        let manifest = JSON.parse(localStorage.getItem('M_BREAD_1')) || [];
-        let logs = JSON.parse(localStorage.getItem('L_BREAD_1')) || {};
+        let manifest = JSON.parse(localStorage.getItem('M_BREAD_2')) || [];
+        let logs = JSON.parse(localStorage.getItem('L_BREAD_2')) || {};
         let activeDate = new Date().toISOString().split('T')[0];
         let buildMode = 'fixed', editId = null, curHId = null;
 
@@ -172,7 +172,7 @@
                 const idx = manifest.findIndex(x => x.id === editId);
                 manifest[idx] = h;
             } else manifest.push(h);
-            localStorage.setItem('M_BREAD_1', JSON.stringify(manifest));
+            localStorage.setItem('M_BREAD_2', JSON.stringify(manifest));
             resetBuilder();
             nav('track');
         }
@@ -185,7 +185,6 @@
             habits.forEach(h => {
                 const l = logs[activeDate]?.[h.id] || { done: false, n: null, t: [] };
                 const hasData = l.n !== null || (l.t && l.t.length > 0);
-                
                 let pills = '';
                 if(l.n !== null) pills += `<div class="pill">${l.n}${h.unit}</div>`;
                 if(l.t) l.t.forEach(t => pills += `<div class="pill">${t}</div>`);
@@ -227,7 +226,6 @@
             ensureL(id); const l = logs[activeDate][id];
             document.getElementById('pick-title').innerText = h.name;
             const cont = document.getElementById('pick-options'); cont.innerHTML = '';
-
             if(h.useNum) {
                 for(let i=h.min; i<=h.max; i+=h.step) {
                     cont.innerHTML += `<div class="p-4 bg-zinc-900 rounded-xl border ${l.n == i ? 'border-green-500 text-green-500' : 'border-zinc-800'} text-center font-bold" onclick="setN(${i})">${i}</div>`;
@@ -244,8 +242,7 @@
         }
 
         function setN(v) { 
-            logs[activeDate][curHId].n = v; 
-            logs[activeDate][curHId].done = true; 
+            logs[activeDate][curHId].n = v; logs[activeDate][curHId].done = true; 
             save(); closeM('mod-pick'); 
         }
         function setT(t) {
@@ -254,12 +251,18 @@
             tags = h.multi ? (tags.includes(t) ? tags.filter(x => x !== t) : [...tags, t]) : [t];
             logs[activeDate][curHId].t = tags;
             logs[activeDate][curHId].done = true;
-            save(); 
-            if(!h.multi) closeM('mod-pick'); else openPicker(curHId);
+            save(); if(!h.multi) closeM('mod-pick'); else openPicker(curHId);
+        }
+
+        function clearEntry() {
+            if(logs[activeDate][curHId]) {
+                logs[activeDate][curHId] = { done: false, n: null, t: [], notes: '' };
+                save(); openPicker(curHId);
+            }
         }
 
         function ensureL(id) { if(!logs[activeDate]) logs[activeDate] = {}; if(!logs[activeDate][id]) logs[activeDate][id] = { done: false, n: null, t: [], notes: '' }; }
-        function save() { localStorage.setItem('L_BREAD_1', JSON.stringify(logs)); renderTrack(); }
+        function save() { localStorage.setItem('L_BREAD_2', JSON.stringify(logs)); renderTrack(); }
         function closeM(m) { document.getElementById(m).style.display = 'none'; }
 
         function openCalendar() {
@@ -268,18 +271,14 @@
             const first = new Date(now.getFullYear(), now.getMonth(), 1);
             const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
             const offset = (first.getDay() + 6) % 7;
-            
             document.getElementById('cal-head-day').innerText = now.toLocaleDateString('en-GB', { weekday: 'long' });
             document.getElementById('cal-head-date').innerText = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-
             for(let i=0; i<offset; i++) grid.innerHTML += '<div></div>';
             for(let d=1; d<=last.getDate(); d++) {
                 const cur = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 const res = getScore(cur);
                 let style = '';
-                if(res.count > 0) {
-                    style = res.score === 100 ? 'border-color: var(--neon); background: rgba(34,197,94,0.1)' : 'border-color: var(--nn); background: rgba(239,68,68,0.1)';
-                }
+                if(res.count > 0) { style = res.score === 100 ? 'border-color: var(--neon); background: rgba(34,197,94,0.1)' : 'border-color: var(--nn); background: rgba(239,68,68,0.1)'; }
                 grid.innerHTML += `<div class="cal-day" style="${style}" onclick="activeDate='${cur}'; closeM('mod-cal'); renderTrack();">${d}<span class="text-[7px] mt-1 text-zinc-500">${res.score}%</span></div>`;
             }
             document.getElementById('mod-cal').style.display = 'flex';
@@ -288,8 +287,7 @@
         function getScore(dateStr) {
             const dayIdx = new Date(dateStr).getDay();
             const hDay = manifest.filter(h => h.type==='fixed' ? h.days.includes(dayIdx) : true);
-            let done = 0;
-            if(!logs[dateStr]) return { score: 0, count: 0 };
+            let done = 0; if(!logs[dateStr]) return { score: 0, count: 0 };
             hDay.forEach(h => { if(logs[dateStr][h.id]?.done) done++; });
             return { score: hDay.length ? Math.round((done/hDay.length)*100) : 0, count: hDay.length };
         }
@@ -344,7 +342,7 @@
             document.getElementById('cancel-btn').classList.add('hidden');
         }
 
-        function delH(id) { if(confirm('Delete?')) { manifest = manifest.filter(x => x.id !== id); localStorage.setItem('M_BREAD_1', JSON.stringify(manifest)); renderManifest(); } }
+        function delH(id) { if(confirm('Delete?')) { manifest = manifest.filter(x => x.id !== id); localStorage.setItem('M_BREAD_2', JSON.stringify(manifest)); renderManifest(); } }
         
         nav('track');
     </script>
