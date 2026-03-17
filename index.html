@@ -11,9 +11,19 @@
         .hidden { display: none !important; }
         .fixed-header { position: fixed; top: 0; width: 100%; height: 210px; background: var(--bg); border-bottom: 1px solid var(--border); z-index: 100; padding: 10px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
         .content-area { margin-top: 220px; margin-bottom: 120px; padding: 15px; }
+        
+        /* THE GLOWS & CIRCLES RESTORED */
         .stat-circle { width: 70px; height: 70px; border-radius: 50%; border: 2px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0a0a0a; transition: all 0.3s ease; position: relative; }
         .stat-val { font-size: 13px; font-weight: 900; }
         .stat-lab { font-size: 7px; font-weight: 900; color: #444; text-transform: uppercase; margin-top: 1px; }
+        
+        @keyframes pulse-green { 0% { box-shadow: 0 0 0px transparent; } 50% { box-shadow: 0 0 20px var(--neon); } 100% { box-shadow: 0 0 0px transparent; } }
+        @keyframes pulse-orange { 0% { box-shadow: 0 0 0px transparent; } 50% { box-shadow: 0 0 20px var(--reset); } 100% { box-shadow: 0 0 0px transparent; } }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0px transparent; } 50% { box-shadow: 0 0 20px var(--nn); } 100% { box-shadow: 0 0 0px transparent; } }
+        .glow-win { animation: pulse-green 1.2s ease-out; }
+        .glow-warn { animation: pulse-orange 1.2s ease-out; }
+        .glow-fail { animation: pulse-red 1.2s ease-out; }
+
         .habit-card { background: var(--panel); border: 1px solid var(--border); border-radius: 1.25rem; margin-bottom: 10px; display: flex; align-items: center; padding: 16px; position: relative; min-height: 85px; justify-content: space-between; }
         .nn-active { border-left: 4px solid var(--nn); }
         .nn-badge { position: absolute; left: 0; top: 0; background: var(--nn); color: white; font-size: 7px; font-weight: 900; padding: 2px 5px; border-bottom-right-radius: 6px; }
@@ -32,6 +42,13 @@
         .period-pill-row { display: flex; overflow-x: auto; gap: 6px; padding-bottom: 12px; scrollbar-width: none; margin-bottom: 15px; }
         .p-pill { background: #111; border: 1px solid #222; color: #555; padding: 8px 14px; border-radius: 10px; font-size: 10px; font-weight: 900; white-space: nowrap; }
         .p-pill.active { background: var(--neon); color: #000; border-color: var(--neon); }
+        
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .cal-day-cell { aspect-ratio: 1/1; border: 2px solid #222; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 8px; position: relative; font-weight: 900; font-size: 15px; background: #0a0a0a; color: #666; }
+        .cal-perc { position: absolute; bottom: 8px; font-size: 9px; font-weight: 900; letter-spacing: -0.05em; }
+        .cal-win { border-color: var(--neon) !important; background: rgba(34,197,94,0.3) !important; color: #fff !important; }
+        .cal-loss { border-color: var(--nn) !important; background: rgba(239,68,68,0.3) !important; color: #fff !important; }
+
         .fixed-nav { position: fixed; bottom: 0; width: 100%; background: #000; border-top: 1px solid var(--border); display: flex; height: 80px; z-index: 200; padding-bottom: env(safe-area-inset-bottom); }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; font-size: 9px; font-weight: 900; text-transform: uppercase; }
         .nav-item.active { color: var(--neon); }
@@ -40,11 +57,6 @@
         .nav-arrow { font-size: 20px; font-weight: 900; color: #333; padding: 5px; }
         .nav-arrow.active { color: var(--neon); }
         .quote-banner { font-size: 10px; font-weight: 900; letter-spacing: 0.15em; color: var(--quote); text-transform: uppercase; text-align: center; margin-bottom: 2px; }
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-        .cal-day-cell { aspect-ratio: 1/1; border: 2px solid #222; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 8px; position: relative; font-weight: 900; font-size: 15px; background: #0a0a0a; color: #666; }
-        .cal-perc { position: absolute; bottom: 8px; font-size: 9px; font-weight: 900; letter-spacing: -0.05em; }
-        .cal-win { border-color: var(--neon) !important; background: rgba(34,197,94,0.3) !important; color: #fff !important; }
-        .cal-loss { border-color: var(--nn) !important; background: rgba(239,68,68,0.3) !important; color: #fff !important; }
     </style>
 </head>
 <body>
@@ -201,47 +213,45 @@
             syncHeader();
         }
 
-        function copyBackup() {
-            const data = { m: manifest, l: logs, c: config };
-            const s = btoa(JSON.stringify(data));
-            const box = document.getElementById('backup-box');
-            const btn = document.getElementById('copy-btn');
-            box.value = s;
-            box.focus();
-            box.setSelectionRange(0, 99999);
-            btn.innerText = "TAP BOX TO COPY";
-            btn.style.backgroundColor = "var(--reset)";
-        }
-
         function syncHeader() { 
             const d = new Date(activeDate); document.getElementById('head-date').innerText = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }); document.getElementById('head-day').innerText = d.toLocaleDateString('en-GB', { weekday: 'long' }); 
-            const s = getDailyStatus(activeDate); document.getElementById('val-score').innerText = s.score + '%'; 
+            const s = getDailyStatus(activeDate); 
+            const valScore = document.getElementById('val-score');
+            const circScore = document.getElementById('score-circle');
+            
+            valScore.innerText = s.score + '%'; 
+            let scoreColor = s.score >= config.pass ? 'var(--neon)' : (s.score >= config.pass * 0.7 ? 'var(--reset)' : 'var(--nn)');
+            valScore.style.color = scoreColor;
+            circScore.style.borderColor = scoreColor;
+
+            // RESTORED GLOW TRIGGER
+            circScore.classList.remove('glow-win', 'glow-warn', 'glow-fail');
+            void circScore.offsetWidth;
+            if(s.score >= config.pass) circScore.classList.add('glow-win');
+            else if(s.score >= (config.pass * 0.7)) circScore.classList.add('glow-warn');
+            else circScore.classList.add('glow-fail');
+
             let conq = 0; Object.keys(logs).forEach(date => { if(getDailyStatus(date).pass) conq++; }); 
-            document.getElementById('val-conquer').innerText = `${conq}/${config.goal}`;
+            const valConq = document.getElementById('val-conquer');
+            valConq.innerText = `${conq}/${config.goal}`;
+            valConq.style.color = (conq/config.goal) >= 1 ? 'var(--neon)' : 'var(--yellow)';
+
             const ad = Object.keys(logs).sort(); document.getElementById('val-gone').innerText = ad.length ? Math.ceil(Math.abs(new Date() - new Date(ad[0]))/86400000) : 0; 
             document.getElementById('c-goal').value = config.goal; document.getElementById('c-pass').value = config.pass; 
         }
 
-        function updateAndLock() { localStorage.setItem('L_BREAD_V10', JSON.stringify(logs)); const btn = document.getElementById('update-btn'); btn.innerText = "SYNCED ✓"; setTimeout(() => { btn.innerText = "UPDATE & LOCK DAY"; }, 1000); renderTrack(); }
-        
-        function setInsightRange(val) { 
-            const pills = document.querySelectorAll('.p-pill');
-            pills.forEach(p => p.classList.remove('active'));
-            if (val === 'MAX') { insightDays = 0; pills[0].classList.add('active'); } 
-            else { insightDays = val; event.target.classList.add('active'); }
-            renderInsights(); 
+        function copyBackup() {
+            const data = { m: manifest, l: logs, c: config };
+            const s = btoa(JSON.stringify(data));
+            const box = document.getElementById('backup-box');
+            box.value = s; box.focus(); box.select(); box.setSelectionRange(0, 99999);
+            document.getElementById('copy-btn').innerText = "TAP BOX TO COPY";
+            document.getElementById('copy-btn').style.backgroundColor = "var(--reset)";
         }
 
-        function setInsightCustom() {
-            const val = prompt("Enter number of days:");
-            if(val && !isNaN(val)) {
-                insightDays = parseInt(val);
-                const pills = document.querySelectorAll('.p-pill');
-                pills.forEach(p => p.classList.remove('active'));
-                pills[pills.length - 1].classList.add('active');
-                renderInsights();
-            }
-        }
+        function updateAndLock() { localStorage.setItem('L_BREAD_V10', JSON.stringify(logs)); const btn = document.getElementById('update-btn'); btn.innerText = "SYNCED ✓"; setTimeout(() => { btn.innerText = "UPDATE & LOCK DAY"; }, 1000); renderTrack(); }
+        function setInsightRange(val) { document.querySelectorAll('.p-pill').forEach(p => p.classList.remove('active')); insightDays = val === 'MAX' ? 0 : val; event.target.classList.add('active'); renderInsights(); }
+        function setInsightCustom() { const val = prompt("Enter days:"); if(val && !isNaN(val)) { insightDays = parseInt(val); renderInsights(); } }
         
         function renderInsights() {
             const list = document.getElementById('insights-list'); list.innerHTML = ''; const now = new Date();
